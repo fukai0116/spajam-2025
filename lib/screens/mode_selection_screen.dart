@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'single_play_screen.dart';
 
 class ModeSelectionScreen extends StatelessWidget {
   const ModeSelectionScreen({super.key});
@@ -110,11 +109,7 @@ class ModeSelectionScreen extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).padding.bottom),
         child: ElevatedButton(
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const SinglePlayScreen(),
-              ),
-            );
+            context.push('/mode/single_play');
           },
           child: const Text('あずきバー溶かしチャレンジ'),
         ),

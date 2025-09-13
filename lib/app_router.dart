@@ -5,6 +5,7 @@ import 'package:spajam2025/screens/mode_selection_screen.dart';
 import 'package:spajam2025/screens/matching_screen.dart';
 import 'package:spajam2025/screens/game_screen.dart';
 import 'package:spajam2025/screens/result_screen.dart';
+import 'package:spajam2025/screens/single_play_screen.dart';
 import 'package:spajam2025/screens/multiplay_menu_screen.dart';
 import 'package:spajam2025/screens/room_select_screen.dart';
 import 'package:spajam2025/screens/multiplay_room_screen.dart';
@@ -16,14 +17,26 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const StartScreen(),
-    ),
-    GoRoute(
-      path: '/mode',
-      builder: (context, state) => const ModeSelectionScreen(),
-    ),
-    GoRoute(
-      path: '/matching',
-      builder: (context, state) => const MatchingScreen(),
+      routes: [
+        GoRoute(
+          path: 'mode',
+          builder: (context, state) => const ModeSelectionScreen(),
+          routes: [
+            GoRoute(
+              path: 'single_play',
+              builder: (context, state) => const SinglePlayScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'matching',
+          builder: (context, state) => const MatchingScreen(),
+        ),
+        GoRoute(
+          path: 'test',
+          builder: (context, state) => const WebSocketTestPage(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/game',
@@ -44,10 +57,6 @@ final router = GoRouter(
     GoRoute(
       path: '/multiplay/room',
       builder: (context, state) => const MultiplayRoomScreen(),
-    ),
-    GoRoute(
-      path: '/test',
-      builder: (context, state) => const WebSocketTestPage(),
     ),
   ],
 );
