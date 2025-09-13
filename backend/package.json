@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "description": "SPAJAM 2025 Backend API Server",
   "main": "src/server.js",
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prod": "NODE_ENV=production node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "heroku-postbuild": "echo \"Build completed\""
   },
-  "keywords": ["spajam", "api", "express", "nodejs"],
+  "keywords": ["spajam", "api", "express", "nodejs", "heroku"],
   "author": "",
   "license": "ISC",
   "dependencies": {

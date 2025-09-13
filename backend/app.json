@@ -1,0 +1,30 @@
+{
+  "name": "SPAJAM 2025 Backend",
+  "description": "SPAJAM 2025 プロジェクトのバックエンド API サーバー",
+  "repository": "https://github.com/fukai0116/spajam-2025",
+  "logo": "",
+  "keywords": ["node", "express", "spajam", "api"],
+  "image": "heroku/nodejs",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node.js の実行環境",
+      "value": "production"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'デプロイが完了しました！'"
+  }
+}

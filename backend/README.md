@@ -49,10 +49,36 @@ npm run dev
 npm start
 ```
 
+#### 本番環境テスト（ローカル）
+```bash
+npm run prod
+```
+
 サーバーが起動すると以下のURLでアクセスできます：
-- サーバー情報: http://localhost:3000/
-- API情報: http://localhost:3000/api
-- ヘルスチェック: http://localhost:3000/api/health
+- サーバー情報: <http://localhost:3000/>
+- API情報: <http://localhost:3000/api>
+- ヘルスチェック: <http://localhost:3000/api/health>
+
+## Heroku デプロイ
+
+### クイックデプロイ
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/fukai0116/spajam-2025/tree/main/backend)
+
+### 手動デプロイ
+詳細な手順は [HEROKU_DEPLOY.md](./HEROKU_DEPLOY.md) を参照してください。
+
+```bash
+# Heroku CLI でログイン
+heroku login
+
+# アプリケーション作成
+heroku create your-app-name
+
+# デプロイ
+git add .
+git commit -m "Deploy to Heroku"
+git push heroku main
+```
 
 ## API エンドポイント
 
