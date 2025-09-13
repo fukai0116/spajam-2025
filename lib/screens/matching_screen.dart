@@ -42,7 +42,16 @@ class _MatchingScreenState extends State<MatchingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        
+        leading: TextButton.icon(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 14),
+          label: const Text('戻る'),
+          style: TextButton.styleFrom(
+            foregroundColor: theme.textTheme.bodyMedium?.color,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+        ),
+        leadingWidth: 80,
         title: const Text(
           'マッチング',
           style: TextStyle(fontSize: 16, letterSpacing: 0.02),
@@ -60,7 +69,7 @@ class _MatchingScreenState extends State<MatchingScreen> {
         backgroundColor: theme.colorScheme.surface,
         elevation: 1,
         centerTitle: true,
-        
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -145,7 +154,7 @@ class _MatchingScreenState extends State<MatchingScreen> {
               maintainState: true,
               child: ElevatedButton(
                 onPressed: () {
-                  context.push('/game');
+                  context.go('/game');
                 },
                 child: const Text('準備OK → ゲーム開始'),
               ),
