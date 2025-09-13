@@ -29,7 +29,7 @@ class ModeSelectionScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'シングルプレイ',
+              'ゲームモードを選択してください',
               style: TextStyle(color: theme.colorScheme.secondary, fontSize: 12),
             ),
           ),
@@ -77,7 +77,33 @@ class ModeSelectionScreen extends StatelessWidget {
                 
                 const SizedBox(height: 24),
                 
-                // マルチプレイボタン追加
+                // シングルプレイボタン
+                ElevatedButton(
+                  onPressed: () => context.push('/mode/single_play'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person),
+                      SizedBox(width: 8),
+                      Text(
+                        'シングルプレイ',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // マルチプレイボタン
                 ElevatedButton(
                   onPressed: () => context.push('/multiplay'),
                   style: ElevatedButton.styleFrom(
@@ -91,7 +117,7 @@ class ModeSelectionScreen extends StatelessWidget {
                       Icon(Icons.people),
                       SizedBox(width: 8),
                       Text(
-                        'マルチプレイで対戦',
+                        'マルチプレイ',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -103,15 +129,6 @@ class ModeSelectionScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).padding.bottom),
-        child: ElevatedButton(
-          onPressed: () {
-            context.push('/mode/single_play');
-          },
-          child: const Text('あずきバー溶かしチャレンジ'),
         ),
       ),
     );
