@@ -10,16 +10,7 @@ class ModeSelectionScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: TextButton.icon(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 14),
-          label: const Text('戻る'),
-          style: TextButton.styleFrom(
-            foregroundColor: theme.textTheme.bodyMedium?.color,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-          ),
-        ),
-        leadingWidth: 80,
+        
         title: const Text(
           'モード選択',
           style: TextStyle(fontSize: 16, letterSpacing: 0.02),
@@ -37,7 +28,7 @@ class ModeSelectionScreen extends StatelessWidget {
         backgroundColor: theme.colorScheme.surface,
         elevation: 1,
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -83,7 +74,7 @@ class ModeSelectionScreen extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).padding.bottom),
         child: ElevatedButton(
           onPressed: () {
-            context.go('/game');
+            context.push('/game');
           },
           child: const Text('タイムアタック'),
         ),
