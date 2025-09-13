@@ -83,32 +83,32 @@ class SingleGameSession {
     };
   }
 
-  // 温度に基づくライフ変化の計算
+  // 温度に基づくライフ変化の計算（修正版）
   calculateLifeDelta(temperature) {
-    // 寒いダジャレ（マイナス温度）ほどあずきバーが溶ける（ライフ減少）
-    // 暑いダジャレ（プラス温度）ほどあずきバーが凍る（ライフ増加）
+    // 寒いダジャレ（マイナス温度）ほどあずきバーが凍る（ライフ増加）
+    // 暑いダジャレ（プラス温度）ほどあずきバーが溶ける（ライフ減少）
     
-    if (temperature < -20) {
-      // 超寒いダジャレ：大幅にライフ減少
-      return -25;
-    } else if (temperature < -10) {
-      // 寒いダジャレ：中程度にライフ減少
-      return -15;
+    if (temperature <= -15) {
+      // 超寒いダジャレ：大幅にライフ増加（凍る）
+      return Math.floor(Math.random() * 15) + 10; // 10-25点
+    } else if (temperature <= -5) {
+      // 寒いダジャレ：中程度にライフ増加（凍る）
+      return Math.floor(Math.random() * 10) + 5; // 5-15点
     } else if (temperature < 0) {
-      // やや寒いダジャレ：少しライフ減少
-      return -8;
+      // やや寒いダジャレ：少しライフ増加（凍る）
+      return Math.floor(Math.random() * 5) + 2; // 2-7点
     } else if (temperature <= 10) {
-      // 普通の温度：わずかにライフ変化
-      return Math.random() > 0.5 ? -3 : 3;
-    } else if (temperature <= 30) {
-      // 暖かいダジャレ：ライフ少し回復
-      return 5;
-    } else if (temperature <= 50) {
-      // 暑いダジャレ：ライフ中程度回復
-      return 12;
+      // ほんのり暖かい：わずかにライフ減少（溶ける）
+      return -(Math.floor(Math.random() * 5) + 2); // -2〜-7点
+    } else if (temperature <= 25) {
+      // 暖かいダジャレ：ライフ中程度減少（溶ける）
+      return -(Math.floor(Math.random() * 10) + 8); // -8〜-18点
+    } else if (temperature <= 40) {
+      // 暑いダジャレ：ライフ大幅減少（溶ける）
+      return -(Math.floor(Math.random() * 15) + 15); // -15〜-30点
     } else {
-      // 超暑いダジャレ：ライフ大幅回復
-      return 20;
+      // 超暑いダジャレ：ライフ激減（完全に溶ける）
+      return -(Math.floor(Math.random() * 20) + 20); // -20〜-40点
     }
   }
 

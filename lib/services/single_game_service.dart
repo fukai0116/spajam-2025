@@ -55,10 +55,13 @@ class SingleGameService {
   // ダジャレ評価
   Future<bool> evaluateDajare(String dajare) async {
     if (_playerId == null || !isGameActive) {
+      print('評価失敗: プレイヤーIDなし または ゲーム非アクティブ');
       return false;
     }
 
     try {
+      print('ダジャレ評価リクエスト: $_playerId, "$dajare"');
+      
       final response = await http.post(
         Uri.parse('$baseUrl/game/single/dajare'),
         headers: {'Content-Type': 'application/json'},
@@ -68,11 +71,19 @@ class SingleGameService {
         }),
       );
 
+      print('評価レスポンス: ${response.statusCode}');
+      print('評価レスポンスボディ: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('評価データ: $data');
+        
         if (data['success']) {
           final result = EvaluationResult.fromJson(data['result']);
           _currentGameState = result.gameState;
+          
+          print('評価結果: ${result.evaluation.comment}');
+          print('ライフ変化: ${result.lifeDelta}');
           
           _evaluationController.add(result);
           _gameStateController.add(_currentGameState!);

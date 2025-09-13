@@ -28,39 +28,39 @@ class AdvancedDajareEvaluator {
         messages: [
           {
             role: "system",
-            content: `あなたはダジャレ評価の専門家です。ダジャレの評価を以下の基準で行い、あずきバーライフシステムを適用してください：
+            content: `あなたは優しいダジャレ評価の専門家です。あずきバーが溶けやすくなるように、ダジャレの温度を高めに評価してください：
 
-【評価基準】
-1. 温度レベル (-10〜10点): 寒いダジャレは低く、暑い・熱いダジャレは高く
-2. 質 (0〜10点): 言葉遊びの巧妙さ、面白さ
-3. 創造性 (0〜10点): オリジナリティ、ユニークさ
-4. 音韻 (0〜10点): 韻の踏み方、リズム感
+【重要】普通のダジャレでも温度20〜35度程度をつけて、あずきバーが溶けやすくしてください！
 
-【あずきバーライフシステム】
-- 寒いダジャレ（温度レベル-5以下）: ライフ10-30点追加（寒さで固まるため）
-- 普通のダジャレ（温度レベル-4〜4）: ライフ変化なし
-- 暑いダジャレ（温度レベル5以上）: ライフ10-50点減少（溶けるため）
+【評価基準】（高温度寄り設定）
+1. 温度レベル (-15〜60点): 
+   - 寒い系ダジャレ: -15〜-3点
+   - 普通のダジャレ: 15〜35点（高めに設定）
+   - 面白いダジャレ: 35〜60点
+2. 面白さ (4〜10点): 優しく評価
+3. 創造性 (3〜10点): チャレンジ精神を評価
+4. 音韻 (3〜10点): 言葉遊びの試みを評価
+
+【温度付けの指針】
+- 「暑い」「熱い」「火」などの暑さ系キーワード → 40〜60点
+- 普通のダジャレや繰り返し系 → 20〜35点
+- つまらないダジャレでも → 15〜25点
+- 明らかに寒い系キーワードのみ → 0〜-15点
 
 必ず以下のJSON形式で回答してください：
 {
-  "thermal": 数値,
-  "quality": 数値,
-  "creativity": 数値,
-  "sound": 数値,
-  "totalScore": 数値,
-  "azukiBarLifeChange": 数値,
-  "evaluation": "評価コメント",
-  "analysis": "詳細分析",
-  "recommendations": ["改善提案1", "改善提案2"]
+  "temperature": 数値(-15〜60),
+  "funnyScore": 数値(4〜10),
+  "comment": "優しく温かいコメント"
 }`
           },
           {
             role: "user",
-            content: `以下のダジャレを評価してください：「${dajare}」`
+            content: `以下のダジャレを優しく評価してください：「${dajare}」`
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 500
       });
 
       const response = completion.choices[0].message.content;
@@ -72,7 +72,7 @@ class AdvancedDajareEvaluator {
     }
   }
 
-  // OpenAIのレスポンスをパース
+  // OpenAIのレスポンスをパース（優しい評価版）
   parseOpenAIResponse(response, efficiencyModifier) {
     try {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -82,24 +82,45 @@ class AdvancedDajareEvaluator {
 
       const data = JSON.parse(jsonMatch[0]);
       
-      const breakdown = {
-        thermal: data.thermal || 0,
-        quality: data.quality || 0,
-        creativity: data.creativity || 0,
-        sound: data.sound || 0
-      };
-
-      const score = data.totalScore || (breakdown.thermal + breakdown.quality + breakdown.creativity + breakdown.sound) / 4;
-      const finalScore = score * efficiencyModifier;
+      // 新しいAPIレスポンス形式に対応
+      const temperature = data.temperature || 0;
+      const funnyScore = Math.max(data.funnyScore || 5, 3); // 最低3点保証
+      
+      // ライフが減りやすい設定（新温度範囲対応）
+      let azukiBarLifeChange = 0;
+      if (temperature <= -10) {
+        azukiBarLifeChange = Math.floor(Math.random() * 15) + 5; // 5-20点（凍る）
+      } else if (temperature <= -3) {
+        azukiBarLifeChange = Math.floor(Math.random() * 8) + 2; // 2-10点（少し凍る）
+      } else if (temperature >= 40) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 30) + 15); // -15〜-45点（大きく溶ける）
+      } else if (temperature >= 25) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 20) + 10); // -10〜-30点（溶ける）
+      } else if (temperature >= 10) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 12) + 5); // -5〜-17点（少し溶ける）
+      } else if (temperature >= 3) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 6) + 2); // -2〜-8点（わずかに溶ける）
+      }
+      
+      // 優しい総合スコア計算
+      const totalScore = Math.max(temperature + funnyScore + 5, 8); // 最低8点保証
+      const finalScore = totalScore * efficiencyModifier;
 
       return {
         score: Math.round(finalScore * 10) / 10,
-        breakdown,
-        evaluation: data.evaluation || 'AI評価が完了しました',
-        analysis: data.analysis || '詳細分析が利用できます',
-        recommendations: data.recommendations || [],
-        azukiBarLifeChange: data.azukiBarLifeChange || 0,
-        thermalLevel: this.getThermalLevelDescription(breakdown.thermal)
+        breakdown: {
+          thermal: temperature,
+          quality: funnyScore,
+          creativity: Math.max(Math.floor(funnyScore * 0.8), 2),
+          sound: Math.max(Math.floor(funnyScore * 0.9), 2)
+        },
+        evaluation: data.comment || 'ナイスなダジャレです！',
+        analysis: `温度: ${temperature}度、面白さ: ${funnyScore}点の評価です！`,
+        recommendations: temperature < 0 ? 
+          ["もう少し暖かいダジャレにチャレンジしてみよう！"] : 
+          ["その調子でもっと面白いダジャレを！"],
+        azukiBarLifeChange: azukiBarLifeChange,
+        thermalLevel: this.getThermalLevelDescription(temperature)
       };
 
     } catch (error) {
@@ -108,27 +129,27 @@ class AdvancedDajareEvaluator {
     }
   }
 
-  // フォールバック評価（API利用不可時）
+  // フォールバック評価（API利用不可時）- 優しい版
   fallbackEvaluation(dajare) {
     const length = dajare.length;
     
-    // 簡易評価ロジック
+    // 優しい簡易評価ロジック
     const thermal = this.analyzeThermalLevel(dajare);
-    const quality = Math.random() * 5 + 2;
-    const creativity = Math.random() * 4 + 1;
+    const quality = Math.random() * 4 + 5; // 5-9点で優しく
+    const creativity = Math.random() * 3 + 4; // 4-7点
     const sound = this.analyzeSoundPattern(dajare);
 
     const breakdown = { thermal, quality, creativity, sound };
-    const score = (thermal + quality + creativity + sound) / 4;
+    const score = Math.max((thermal + quality + creativity + sound) / 4, 6); // 最低6点保証
 
-    // あずきバーライフ変化を計算
+    // 優しいあずきバーライフ変化を計算
     const azukiBarLifeChange = this.calculateAzukiBarLifeChange(thermal);
 
     return {
       score: Math.round(score * 10) / 10,
       breakdown,
       evaluation: this.getEvaluationText(score),
-      analysis: `文字数: ${length}文字, 温度レベル: ${this.getThermalLevelDescription(thermal)}`,
+      analysis: `文字数: ${length}文字, 温度レベル: ${this.getThermalLevelDescription(thermal)} - 頑張ったダジャレです！`,
       recommendations: this.generateRecommendations(breakdown),
       azukiBarLifeChange,
       thermalLevel: this.getThermalLevelDescription(thermal)
@@ -165,16 +186,25 @@ class AdvancedDajareEvaluator {
     return Math.min(10, (hiraganaCount * 0.3 + katakanaCount * 0.5 + kanjiCount * 0.2));
   }
 
-  // あずきバーライフ変化を計算
+  // あずきバーライフ変化を計算（減りやすい版）
   calculateAzukiBarLifeChange(thermalLevel) {
-    if (thermalLevel <= -5) {
-      // 寒いダジャレ：ライフ追加（10-30点）
-      return Math.floor(Math.random() * 21) + 10;
-    } else if (thermalLevel >= 5) {
-      // 暑いダジャレ：ライフ減少（10-50点）
-      return -(Math.floor(Math.random() * 41) + 10);
+    if (thermalLevel <= -8) {
+      // 極寒ダジャレ：ライフ追加（5-20点）
+      return Math.floor(Math.random() * 16) + 5;
+    } else if (thermalLevel <= -3) {
+      // 寒いダジャレ：ライフ追加（2-10点）
+      return Math.floor(Math.random() * 9) + 2;
+    } else if (thermalLevel >= 8) {
+      // 灼熱ダジャレ：ライフ減少（10-30点）
+      return -(Math.floor(Math.random() * 21) + 10);
+    } else if (thermalLevel >= 3) {
+      // 暑いダジャレ：ライフ減少（5-18点）
+      return -(Math.floor(Math.random() * 14) + 5);
+    } else if (thermalLevel >= 0) {
+      // ほんのり暖かいダジャレ：ライフ減少（2-8点）
+      return -(Math.floor(Math.random() * 7) + 2);
     }
-    // 普通のダジャレ：変化なし
+    // マイナス温度のダジャレ：変化なし
     return 0;
   }
 
@@ -189,40 +219,39 @@ class AdvancedDajareEvaluator {
     return '灼熱🔥🔥🔥';
   }
 
-  // 評価テキスト生成
+  // 評価テキスト生成（優しい版）
   getEvaluationText(score) {
     if (score >= 8) return '🔥🔥🔥 最高のダジャレ！会場が燃え上がってます！';
-    if (score >= 6) return '🔥🔥 素晴らしいダジャレ！観客も大興奮！';
-    if (score >= 4) return '🔥 良いダジャレ！温かい拍手が！';
-    if (score >= 2) return '☀️ ほんのり温かい。あと一息！';
-    if (score >= 0) return '😐 普通のダジャレ。可もなく不可もなく。';
-    if (score >= -2) return '🌤️ ちょっと曇り空。もう少し温度を上げて！';
-    if (score >= -4) return '❄️ 寒いダジャレ。観客も震えてます。';
-    return '🧊 極寒のダジャレ。あずきバーが凍ってます！';
+    if (score >= 7) return '🔥🔥 素晴らしいダジャレ！観客も大興奮！';
+    if (score >= 6) return '🔥 良いダジャレ！温かい拍手が！';
+    if (score >= 5) return '👏 なかなかのダジャレ！いい感じです！';
+    if (score >= 4) return '😊 頑張ったダジャレ！努力が伝わります！';
+    if (score >= 3) return '🙂 チャレンジしたダジャレ！次も期待！';
+    return '😌 ファイト！次はもっと良いダジャレを！';
   }
 
-  // 改善提案生成
+  // 改善提案生成（優しい版）
   generateRecommendations(breakdown) {
     const recommendations = [];
     
-    if (breakdown.thermal < 0) {
-      recommendations.push('🔥 もっと熱いキーワードを使ってみてください');
+    if (breakdown.thermal < -2) {
+      recommendations.push('🔥 もう少し暖かいキーワードを使ってみませんか？');
     }
-    if (breakdown.quality < 3) {
-      recommendations.push('✨ もう少し創造性を加えてみてください');
+    if (breakdown.quality < 5) {
+      recommendations.push('✨ 素敵なアイデアです！もう少し発展させてみましょう');
     }
-    if (breakdown.creativity < 2) {
-      recommendations.push('🚀 もっとオリジナルな表現に挑戦してみてください');
+    if (breakdown.creativity < 4) {
+      recommendations.push('🚀 良いチャレンジです！もっとユニークな表現も試してみて');
     }
-    if (breakdown.sound < 2) {
-      recommendations.push('🎵 音の響きやリズムを意識してみましょう');
+    if (breakdown.sound < 4) {
+      recommendations.push('🎵 音の響きを意識すると更に良くなりそう！');
     }
     
     if (recommendations.length === 0) {
-      recommendations.push('😊 なかなか良いですね！');
+      recommendations.push('😊 とても良いダジャレです！このまま頑張って！');
     }
     
-    return recommendations.slice(0, 3);
+    return recommendations.slice(0, 2); // 最大2つに制限
   }
 
   // テスト機能
