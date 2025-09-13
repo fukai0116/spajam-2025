@@ -23,21 +23,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const io = new Server(httpServer, {
   cors: {
     origin: function (origin, callback) {
-      // 本番環境では特定のオリジンを許可、開発環境では全て許可
-      if (NODE_ENV === 'development') {
-        callback(null, true);
-      } else {
-        const allowedOrigins = [
-          'https://spajam2025-frontend.onrender.com',
-          'https://localhost:3000',
-          'http://localhost:3000'
-        ];
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      }
+      // 開発・テスト用に全てのオリジンを許可
+      console.log('🔌 Socket.IO CORS Origin:', origin);
+      callback(null, true);
     },
     methods: ["GET", "POST"],
     credentials: true
@@ -50,22 +38,9 @@ new WebSocketHandler(io);
 // CORS設定（本番環境とローカル環境に対応）
 const corsOptions = {
   origin: function (origin, callback) {
-    // 本番環境では特定のオリジンを許可、開発環境では全て許可
-    if (NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      // 本番環境での許可オリジンリスト（必要に応じて更新）
-      const allowedOrigins = [
-        'https://spajam2025-frontend.onrender.com',
-        'https://localhost:3000',
-        'http://localhost:3000'
-      ];
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
+    // 開発・テスト用に全てのオリジンを許可
+    console.log('🌐 CORS Origin:', origin);
+    callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200

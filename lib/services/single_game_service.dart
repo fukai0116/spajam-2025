@@ -29,6 +29,10 @@ class SingleGameService {
       _playerId = 'player_${DateTime.now().millisecondsSinceEpoch}';
       _playerName = playerName;
 
+      print('🔗 Connecting to: $baseUrl');
+      print('🌍 isProduction: ${AppConfig.isProduction}');
+      print('🌐 serverUrl: ${AppConfig.serverUrl}');
+
       final response = await http.post(
         Uri.parse('$baseUrl/game/single/start'),
         headers: {'Content-Type': 'application/json'},
