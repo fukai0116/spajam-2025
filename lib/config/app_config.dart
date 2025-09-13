@@ -14,6 +14,17 @@ class AppConfig {
     //   return 'https://spajam-2025.onrender.com';
     // }
   }
+
+  static String get webSocketUrl {
+    // serverUrlからWebSocket用のURLを生成
+    final url = serverUrl;
+    if (url.startsWith('https://')) {
+      return url.replaceFirst('https://', 'wss://');
+    } else if (url.startsWith('http://')) {
+      return url.replaceFirst('http://', 'ws://');
+    }
+    return url;
+  }
   
   static String get apiBaseUrl => '$serverUrl/api';
 }

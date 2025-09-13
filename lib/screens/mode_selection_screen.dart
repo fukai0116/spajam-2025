@@ -1,8 +1,71 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:spajam2025/config/app_config.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 
-class ModeSelectionScreen extends StatelessWidget {
+class ModeSelectionScreen extends StatefulWidget {
   const ModeSelectionScreen({super.key});
+
+  @override
+  State<ModeSelectionScreen> createState() => _ModeSelectionScreenState();
+}
+
+class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
+  bool _isServerOnline = false;
+  bool _isLoading = true;
+  String? _connectionError;
+  Timer? _healthCheckTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServerStatus();
+    _healthCheckTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _checkServerStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _healthCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkServerStatus() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/health')).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            _isServerOnline = true;
+            _connectionError = null;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isServerOnline = false;
+            _connectionError = 'サーバーに接続できませんでした';
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isServerOnline = false;
+          _connectionError = 'サーバーに接続できませんでした';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +92,7 @@ class ModeSelectionScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'ゲームモードを選択してください',
+              'あずきバー溶かしチャレンジ',
               style: TextStyle(color: theme.colorScheme.secondary, fontSize: 12),
             ),
           ),
@@ -77,21 +140,22 @@ class ModeSelectionScreen extends StatelessWidget {
                 
                 const SizedBox(height: 24),
                 
-                // シングルプレイボタン
+                // プレイボタン（旧シングルプレイ）
                 ElevatedButton(
                   onPressed: () => context.push('/mode/single_play'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: creamColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.person),
-                      SizedBox(width: 8),
+                      Icon(Icons.play_arrow, size: 28),
+                      SizedBox(width: 12),
                       Text(
-                        'シングルプレイ',
+                        'プレイ',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -102,13 +166,39 @@ class ModeSelectionScreen extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 12),
+
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (_connectionError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          _connectionError!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            _checkServerStatus();
+                          },
+                          child: const Text('再接続'),
+                        ),
+                      ],
+                    ),
+                  ),
                 
                 // マルチプレイボタン
                 ElevatedButton(
-                  onPressed: () => context.push('/multiplay'),
+                  onPressed: _isServerOnline ? () => context.push('/multiplay') : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: azukiColor,
+                    foregroundColor: creamColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Row(
@@ -119,7 +209,7 @@ class ModeSelectionScreen extends StatelessWidget {
                       Text(
                         'マルチプレイ',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

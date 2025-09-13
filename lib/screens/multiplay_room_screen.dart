@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 import '../services/multiplay_game_service.dart';
 
 class MultiplayRoomScreen extends StatefulWidget {
@@ -254,8 +255,8 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('ルーム ${_gameService.roomId ?? ''}'),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
+        backgroundColor: azukiColor,
+        foregroundColor: creamColor,
         actions: [
           if (_roomState?['status'] == 'waiting' && 
               _roomState?['hostPlayerId'] == _gameService.playerId)
@@ -271,7 +272,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange, Colors.deepOrange],
+            colors: [azukiColor, Colors.black],
           ),
         ),
         child: SafeArea(
@@ -300,7 +301,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: creamColor.withOpacity(0.9),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -354,7 +355,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: creamColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -379,10 +380,10 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: player['isHost'] ? Colors.orange : Colors.blue,
+                        backgroundColor: player['isHost'] ? azukiColor : creamColor,
                         child: Text(
                           player['playerName']?.substring(0, 1) ?? 'P',
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: creamColor),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -395,7 +396,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
                       if (player['isHost'])
                         const Chip(
                           label: Text('ホスト'),
-                          backgroundColor: Colors.orange,
+                          backgroundColor: azukiColor,
                         ),
                     ],
                   ),
@@ -413,8 +414,8 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
               child: ElevatedButton(
                 onPressed: players.length >= 2 ? _startGame : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
+                  backgroundColor: azukiColor,
+                  foregroundColor: creamColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -432,7 +433,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
             const Text(
               'ホストがゲームを開始するのを待っています...',
               style: TextStyle(
-                color: Colors.white,
+                color: creamColor,
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
@@ -453,7 +454,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: creamColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -489,7 +490,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
                         child: Text(
                           '${player['azukiBarLife'] ?? 100}%',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: creamColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -517,7 +518,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: creamColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Column(
@@ -558,7 +559,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
                     ),
                     subtitle: Text('by ${dajare['playerName'] ?? ''}'),
                     trailing: hasVoted
-                        ? const Icon(Icons.check, color: Colors.green)
+                        ? const Icon(Icons.check, color: azukiColor)
                         : ElevatedButton(
                             onPressed: () => _vote(dajare['id']),
                             child: const Text('投票'),
@@ -577,7 +578,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: creamColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
@@ -600,8 +601,8 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           ElevatedButton(
             onPressed: _isSubmitting ? null : _submitDajare,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
+              backgroundColor: azukiColor,
+              foregroundColor: creamColor,
               padding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 12,
@@ -613,7 +614,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: creamColor,
                     ),
                   )
                 : const Text('送信'),
@@ -634,8 +635,8 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
   }
 
   Color _getLifeColor(int life) {
-    if (life > 70) return Colors.green;
-    if (life > 30) return Colors.orange;
-    return Colors.red;
+    if (life > 70) return azukiColor;
+    if (life > 30) return azukiColor;
+    return Colors.black;
   }
 }

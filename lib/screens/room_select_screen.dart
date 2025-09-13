@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 import '../services/multiplay_game_service.dart';
 
 class RoomSelectScreen extends StatefulWidget {
@@ -168,13 +169,13 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'waiting':
-        return Colors.green;
+        return azukiColor;
       case 'playing':
-        return Colors.orange;
+        return azukiColor;
       case 'finished':
-        return Colors.grey;
+        return azukiColor;
       default:
-        return Colors.grey;
+        return azukiColor;
     }
   }
 
@@ -183,8 +184,8 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('ルーム選択'),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
+        backgroundColor: azukiColor,
+        foregroundColor: creamColor,
         actions: [
           IconButton(
             onPressed: _loadRooms,
@@ -197,7 +198,7 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange, Colors.deepOrange],
+            colors: [azukiColor, Colors.black],
           ),
         ),
         child: SafeArea(
@@ -214,8 +215,8 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                         icon: const Icon(Icons.add),
                         label: const Text('ルーム作成'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.deepOrange,
+                          backgroundColor: creamColor,
+                          foregroundColor: azukiColor,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -227,8 +228,8 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                         icon: const Icon(Icons.shuffle),
                         label: const Text('自動参加'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                          backgroundColor: azukiColor,
+                          foregroundColor: creamColor,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -242,7 +243,7 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: creamColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -260,8 +261,8 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                       ElevatedButton(
                         onPressed: _isLoading ? null : _joinRoomById,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
+                          backgroundColor: azukiColor,
+                          foregroundColor: creamColor,
                         ),
                         child: const Text('参加'),
                       ),
@@ -275,7 +276,7 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: creamColor.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -314,7 +315,7 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
                   child: const Text(
                     'メニューに戻る',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: creamColor,
                       fontSize: 16,
                     ),
                   ),
@@ -339,12 +340,12 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error, size: 48, color: Colors.red),
+            const Icon(Icons.error, size: 48, color: Colors.black),
             const SizedBox(height: 16),
             Text(
               'エラーが発生しました\n$_error',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.black),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -391,7 +392,7 @@ class _RoomSelectScreenState extends State<RoomSelectScreen> {
               backgroundColor: _getStatusColor(status),
               child: Text(
                 '${players.length}',
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: creamColor),
               ),
             ),
             title: Text('ルーム ${room['roomId'] ?? ''}'),
