@@ -1,0 +1,17 @@
+# Render.com用設定ファイル
+services:
+  - type: web
+    name: spajam2025-backend
+    env: node
+    repo: https://github.com/fukai0116/spajam-2025.git
+    branch: feature/fukai-01
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: OPENAI_API_KEY
+        sync: false  # 手動で設定
+    autoDeploy: true
