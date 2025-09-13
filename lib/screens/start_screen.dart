@@ -114,7 +114,7 @@ class StartScreen extends StatelessWidget {
                           const SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: () {
-                              context.go('/matching');
+                              context.push('/matching');
                             },
                             child: const Text('マルチプレイ'),
                           ),
