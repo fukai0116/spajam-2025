@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/game_websocket_service.dart';
+import '../config/app_config.dart';
 import 'dart:math';
 import 'dart:developer' as developer;
 
@@ -99,7 +100,7 @@ class _WebSocketTestPageState extends State<WebSocketTestPage> {
     developer.log('👤 プレイヤー情報: $playerName ($playerId)');
 
     _webSocketService.connect(
-      serverUrl: 'http://192.168.0.9:3000',
+      serverUrl: AppConfig.serverUrl,
       playerId: playerId,
       playerName: playerName,
     );

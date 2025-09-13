@@ -45,7 +45,7 @@
 // lib/config/app_config.dart
 static String get serverUrl {
   if (isProduction) {
-    return 'https://[あなたのサービス名].onrender.com'; // ここを更新
+    return 'https://spajam-2025.onrender.com'; // 実際のURL
   } else {
     return 'http://localhost:3000';
   }

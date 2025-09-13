@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../config/app_config.dart';
 
 /// ゲーム状態管理用のWebSocketサービス
 class GameWebSocketService {
@@ -26,17 +27,18 @@ class GameWebSocketService {
 
   /// WebSocketサーバーに接続
   void connect({
-    String serverUrl = 'http://192.168.0.9:3000',
+    String? serverUrl,
     required String playerId,
     required String playerName,
   }) {
     _playerId = playerId;
     _playerName = playerName;
 
-    developer.log('🔌 WebSocket接続開始: $serverUrl');
+    final url = serverUrl ?? AppConfig.serverUrl;
+    developer.log('🔌 WebSocket接続開始: $url');
     developer.log('👤 プレイヤー情報: $playerName ($playerId)');
 
-    _socket = IO.io(serverUrl, <String, dynamic>{
+    _socket = IO.io(url, <String, dynamic>{
       'transports': ['websocket', 'polling'], // fallback to polling
       'autoConnect': false,
       'timeout': 20000,

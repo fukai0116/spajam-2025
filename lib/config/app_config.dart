@@ -4,8 +4,8 @@ class AppConfig {
   
   static String get serverUrl {
     if (isProduction) {
-      // 本番環境: Render.comのURL（後で更新）
-      return 'https://spajam2025-backend.onrender.com';
+      // 本番環境: Render.comのURL
+      return 'https://spajam-2025.onrender.com';
     } else {
       // 開発環境: ローカルサーバー
       return 'http://localhost:3000';
