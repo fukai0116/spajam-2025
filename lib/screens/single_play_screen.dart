@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../services/single_game_service.dart';
 import 'dart:async';
 
@@ -195,6 +196,14 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
             child: _isLoading 
               ? const CircularProgressIndicator()
               : const Text('ゲーム開始', style: TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(height: 16), // スペース
+          TextButton(
+            onPressed: () {
+              // ホーム画面に戻る
+              context.go('/'); // go_router を使う
+            },
+            child: const Text('キャンセル'),
           ),
         ],
       ),
@@ -498,10 +507,7 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('シングルプレイ'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: _gameStarted ? _buildGamePlay() : _buildGameSetup(),
     );
