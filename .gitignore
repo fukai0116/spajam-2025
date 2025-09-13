@@ -82,6 +82,7 @@ app.*.map.json
 .env.production.local
 
 # Node.js / Backend関連
+node_modules/
 backend/node_modules/
 backend/npm-debug.log*
 backend/yarn-debug.log*
@@ -91,6 +92,7 @@ backend/dist/
 backend/build/
 backend/.nyc_output
 backend/coverage/
+package-lock.json
 
 # Windows関連
 /windows/flutter/ephemeral/

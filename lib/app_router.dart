@@ -5,6 +5,7 @@ import 'package:spajam2025/screens/mode_selection_screen.dart';
 import 'package:spajam2025/screens/matching_screen.dart';
 import 'package:spajam2025/screens/game_screen.dart';
 import 'package:spajam2025/screens/result_screen.dart';
+import 'package:spajam2025/pages/websocket_test_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -28,6 +29,10 @@ final router = GoRouter(
     GoRoute(
       path: '/result',
       builder: (context, state) => const ResultScreen(),
+    ),
+    GoRoute(
+      path: '/test',
+      builder: (context, state) => const WebSocketTestPage(),
     ),
   ],
 );

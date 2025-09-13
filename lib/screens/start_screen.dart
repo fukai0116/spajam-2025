@@ -118,6 +118,17 @@ class StartScreen extends StatelessWidget {
                             },
                             child: const Text('マルチプレイ'),
                           ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.go('/test');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade100,
+                              foregroundColor: Colors.blue.shade800,
+                            ),
+                            child: const Text('WebSocketテスト'),
+                          ),
                         ],
                       ),
                     ),
