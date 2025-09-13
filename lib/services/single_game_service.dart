@@ -32,6 +32,7 @@ class SingleGameService {
       print('🔗 Connecting to: $baseUrl');
       print('🌍 isProduction: ${AppConfig.isProduction}');
       print('🌐 serverUrl: ${AppConfig.serverUrl}');
+      print('🎯 Final API URL: $baseUrl/game/single/start');
 
       final response = await http.post(
         Uri.parse('$baseUrl/game/single/start'),
