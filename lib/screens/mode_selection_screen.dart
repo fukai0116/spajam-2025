@@ -145,13 +145,9 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                   onPressed: () => context.push('/mode/single_play'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-<<<<<<< HEAD
                     foregroundColor: creamColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-=======
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
->>>>>>> b6b891e0b9838f4e7a188bef4ad7fdddccfc2da9
+
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -161,7 +157,6 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                       Text(
                         'プレイ',
                         style: TextStyle(
-<<<<<<< HEAD
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -214,10 +209,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                       Text(
                         'マルチプレイ',
                         style: TextStyle(
-                          fontSize: 16,
-=======
                           fontSize: 18,
->>>>>>> b6b891e0b9838f4e7a188bef4ad7fdddccfc2da9
                           fontWeight: FontWeight.bold,
                         ),
                       ),
