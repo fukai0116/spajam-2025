@@ -22,7 +22,7 @@ const io = new Server(httpServer, {
         callback(null, true);
       } else {
         const allowedOrigins = [
-          'https://your-flutter-web-app.herokuapp.com',
+          'https://spajam2025-frontend.onrender.com',
           'https://localhost:3000',
           'http://localhost:3000'
         ];
@@ -50,7 +50,7 @@ const corsOptions = {
     } else {
       // 本番環境での許可オリジンリスト（必要に応じて更新）
       const allowedOrigins = [
-        'https://your-flutter-web-app.herokuapp.com',
+        'https://spajam2025-frontend.onrender.com',
         'https://localhost:3000',
         'http://localhost:3000'
       ];

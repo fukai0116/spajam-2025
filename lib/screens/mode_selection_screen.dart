@@ -75,6 +75,32 @@ class ModeSelectionScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                
+                const SizedBox(height: 24),
+                
+                // マルチプレイボタン追加
+                ElevatedButton(
+                  onPressed: () => context.push('/multiplay'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people),
+                      SizedBox(width: 8),
+                      Text(
+                        'マルチプレイで対戦',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

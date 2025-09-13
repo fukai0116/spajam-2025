@@ -1,9 +1,15 @@
-const gameService = require('./gameService');
+const MultiplayGameManager = require('./multiplayGameManager');
 
 class WebSocketHandler {
   constructor(io) {
     this.io = io;
+    this.multiplayManager = new MultiplayGameManager();
     this.setupEventHandlers();
+
+    // 定期クリーンアップ（5分ごと）
+    setInterval(() => {
+      this.multiplayManager.cleanup();
+    }, 5 * 60 * 1000);
   }
 
   setupEventHandlers() {
@@ -11,13 +17,8 @@ class WebSocketHandler {
       console.log(`🔌 Player connected: ${socket.id}`);
 
       // プレイヤー接続時の初期化
-      socket.on('player_join', (data) => {
-        this.handlePlayerJoin(socket, data);
-      });
-
-      // オートマッチング
-      socket.on('auto_match', (data) => {
-        this.handleAutoMatch(socket, data);
+      socket.on('player_connect', (data) => {
+        this.handlePlayerConnect(socket, data);
       });
 
       // ルーム作成
@@ -30,6 +31,16 @@ class WebSocketHandler {
         this.handleJoinRoom(socket, data);
       });
 
+      // オートマッチング
+      socket.on('auto_match', (data) => {
+        this.handleAutoMatch(socket, data);
+      });
+
+      // ゲーム開始
+      socket.on('start_game', (data) => {
+        this.handleStartGame(socket, data);
+      });
+
       // ダジャレ投稿
       socket.on('submit_dajare', (data) => {
         this.handleSubmitDajare(socket, data);
@@ -40,14 +51,14 @@ class WebSocketHandler {
         this.handleVote(socket, data);
       });
 
-      // 人狼の特殊能力使用
-      socket.on('use_werewolf_ability', (data) => {
-        this.handleWerewolfAbility(socket, data);
+      // 観戦開始
+      socket.on('spectate_room', (data) => {
+        this.handleSpectateRoom(socket, data);
       });
 
-      // 投票フェーズ開始要求
-      socket.on('start_voting', (data) => {
-        this.handleStartVoting(socket, data);
+      // ルーム一覧取得
+      socket.on('get_room_list', () => {
+        this.handleGetRoomList(socket);
       });
 
       // 切断処理
@@ -57,13 +68,13 @@ class WebSocketHandler {
     });
   }
 
-  // プレイヤー参加処理
-  handlePlayerJoin(socket, { playerId, playerName }) {
+  // プレイヤー接続処理
+  handlePlayerConnect(socket, { playerId, playerName }) {
     try {
       socket.playerId = playerId;
       socket.playerName = playerName;
       
-      socket.emit('join_success', {
+      socket.emit('connect_success', {
         playerId,
         playerName,
         socketId: socket.id
@@ -73,55 +84,18 @@ class WebSocketHandler {
     }
   }
 
-  // オートマッチング処理
-  handleAutoMatch(socket, { playerId, playerName }) {
-    try {
-      const { room, player } = gameService.autoMatch(playerId, playerName, socket.id);
-      
-      socket.playerId = playerId;
-      socket.roomId = room.id;
-      socket.join(room.id);
-
-      // ルーム内の全プレイヤーに通知
-      this.io.to(room.id).emit('room_updated', {
-        room: this.getRoomStateForClient(room),
-        message: `${playerName}が参加しました`
-      });
-
-      // 参加者に役職を通知（ゲーム開始時）
-      if (room.status === 'playing') {
-        socket.emit('role_assigned', {
-          role: player.role,
-          isWerewolf: player.role === 'werewolf'
-        });
-
-        // ゲーム開始イベント
-        this.io.to(room.id).emit('game_started', {
-          gameState: room.getGameState()
-        });
-      }
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  }
-
   // ルーム作成処理
-  handleCreateRoom(socket, { playerId, playerName }) {
+  handleCreateRoom(socket, { playerId, playerName, maxPlayers = 4 }) {
     try {
-      const { room, player } = gameService.createRoom(playerId, playerName, socket.id);
+      const room = this.multiplayManager.createRoom(playerId, playerName, maxPlayers);
       
       socket.playerId = playerId;
-      socket.roomId = room.id;
-      socket.join(room.id);
+      socket.roomId = room.roomId;
+      socket.join(room.roomId);
 
       socket.emit('room_created', {
         room: this.getRoomStateForClient(room),
-        player: {
-          id: player.id,
-          name: player.name,
-          role: player.role
-        }
+        player: room.getPlayerState(playerId)
       });
 
     } catch (error) {
@@ -132,36 +106,84 @@ class WebSocketHandler {
   // ルーム参加処理
   handleJoinRoom(socket, { roomId, playerId, playerName }) {
     try {
-      const { room, player } = gameService.joinRoom(roomId, playerId, playerName, socket.id);
+      const { room, player } = this.multiplayManager.joinRoom(roomId, playerId, playerName);
       
       socket.playerId = playerId;
-      socket.roomId = room.id;
-      socket.join(room.id);
+      socket.roomId = roomId;
+      socket.join(roomId);
 
       // ルーム内の全プレイヤーに通知
-      this.io.to(room.id).emit('room_updated', {
+      this.io.to(roomId).emit('room_updated', {
         room: this.getRoomStateForClient(room),
-        message: `${playerName}が参加しました`
+        message: `${playerName}が参加しました`,
+        newPlayer: room.getPlayerState(playerId)
       });
 
-      // ゲーム開始時の処理
-      if (room.status === 'playing') {
-        // 全プレイヤーに役職を通知
-        room.players.forEach(p => {
-          const playerSocket = this.findSocketByPlayerId(p.id);
-          if (playerSocket) {
-            playerSocket.emit('role_assigned', {
-              role: p.role,
-              isWerewolf: p.role === 'werewolf'
-            });
-          }
+      socket.emit('room_joined', {
+        room: this.getRoomStateForClient(room),
+        player: room.getPlayerState(playerId)
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  }
+
+  // オートマッチング処理
+  handleAutoMatch(socket, { playerId, playerName }) {
+    try {
+      const { room, player, isNewRoom } = this.multiplayManager.autoMatch(playerId, playerName);
+      
+      socket.playerId = playerId;
+      socket.roomId = room.roomId;
+      socket.join(room.roomId);
+
+      if (isNewRoom) {
+        socket.emit('room_created', {
+          room: this.getRoomStateForClient(room),
+          player: room.getPlayerState(playerId),
+          isAutoMatch: true
+        });
+      } else {
+        // ルーム内の全プレイヤーに通知
+        this.io.to(room.roomId).emit('room_updated', {
+          room: this.getRoomStateForClient(room),
+          message: `${playerName}が参加しました`,
+          newPlayer: room.getPlayerState(playerId)
         });
 
-        // ゲーム開始イベント
-        this.io.to(room.id).emit('game_started', {
-          gameState: room.getGameState()
+        socket.emit('room_joined', {
+          room: this.getRoomStateForClient(room),
+          player: room.getPlayerState(playerId),
+          isAutoMatch: true
         });
       }
+
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  }
+
+  // ゲーム開始処理
+  handleStartGame(socket, { playerId }) {
+    try {
+      const room = this.multiplayManager.getPlayerRoom(playerId);
+      if (!room) {
+        throw new Error('ルームが見つかりません');
+      }
+
+      // ホストのみゲーム開始可能
+      if (room.hostPlayerId !== playerId) {
+        throw new Error('ホストのみゲームを開始できます');
+      }
+
+      const gameState = room.startGame();
+
+      // ルーム内の全プレイヤーにゲーム開始を通知
+      this.io.to(room.roomId).emit('game_started', {
+        gameState,
+        message: 'ゲームが開始されました！'
+      });
 
     } catch (error) {
       socket.emit('error', { message: error.message });
@@ -171,20 +193,33 @@ class WebSocketHandler {
   // ダジャレ投稿処理
   async handleSubmitDajare(socket, { playerId, dajare }) {
     try {
-      const { room, dajareResult } = await gameService.submitDajare(playerId, dajare);
+      const room = this.multiplayManager.getPlayerRoom(playerId);
+      if (!room) {
+        throw new Error('ルームが見つかりません');
+      }
 
-      // ルーム内の全プレイヤーに結果を通知
-      this.io.to(room.id).emit('dajare_evaluated', {
-        dajareResult,
-        gameState: room.getGameState()
+      const result = await room.submitDajare(playerId, dajare);
+
+      // 投稿者に結果を送信
+      socket.emit('dajare_submitted', {
+        dajareEntry: result.dajareEntry,
+        playerState: result.playerState
       });
 
-      // ゲーム終了チェック
-      if (room.status === 'finished') {
-        this.io.to(room.id).emit('game_ended', {
-          gameState: room.getGameState(),
-          endReason: room.endReason
-        });
+      // ルーム内の全プレイヤーに更新を通知
+      this.io.to(room.roomId).emit('game_updated', {
+        gameState: result.gameState,
+        lastDajare: {
+          playerName: result.dajareEntry.playerName,
+          dajare: result.dajareEntry.dajare,
+          evaluation: result.dajareEntry.evaluation
+        }
+      });
+
+      // 投票フェーズ開始チェック
+      if (room.currentPhase === 'voting') {
+        const votingState = room.getVotingState();
+        this.io.to(room.roomId).emit('voting_started', votingState);
       }
 
     } catch (error) {
@@ -193,60 +228,81 @@ class WebSocketHandler {
   }
 
   // 投票処理
-  handleVote(socket, { playerId, targetId }) {
+  handleVote(socket, { playerId, dajareId }) {
     try {
-      const room = gameService.vote(playerId, targetId);
-
-      // 投票結果を通知
-      this.io.to(room.id).emit('vote_updated', {
-        gameState: room.getGameState()
-      });
-
-      // ゲーム終了チェック
-      if (room.status === 'finished') {
-        this.io.to(room.id).emit('game_ended', {
-          gameState: room.getGameState(),
-          endReason: room.endReason
-        });
-      }
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  }
-
-  // 人狼の特殊能力使用処理
-  handleWerewolfAbility(socket, { playerId }) {
-    try {
-      const room = gameService.useWerewolfAbility(playerId);
-
-      // 効果をルーム内に通知
-      this.io.to(room.id).emit('werewolf_ability_used', {
-        message: '吹雪の息が使用されました！',
-        gameState: room.getGameState()
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  }
-
-  // 投票フェーズ開始
-  handleStartVoting(socket, { playerId }) {
-    try {
-      const room = gameService.getPlayerRoom(playerId);
+      const room = this.multiplayManager.getPlayerRoom(playerId);
       if (!room) {
-        throw new Error('Player not in any room');
+        throw new Error('ルームが見つかりません');
       }
 
-      room.votingPhase = true;
+      const votingState = room.vote(playerId, dajareId);
 
-      // 投票フェーズ開始を通知
-      this.io.to(room.id).emit('voting_phase_started', {
-        message: '人狼追放の投票を開始します',
+      // 投票者に確認を送信
+      socket.emit('vote_submitted', {
+        dajareId,
+        votingState
+      });
+
+      // ルーム内の全プレイヤーに投票状況を通知
+      this.io.to(room.roomId).emit('voting_updated', votingState);
+
+      // 結果フェーズ開始チェック
+      if (room.currentPhase === 'result') {
+        const roundResult = room.roundResults[room.roundResults.length - 1];
+        this.io.to(room.roomId).emit('round_result', roundResult);
+
+        // ゲーム終了チェック
+        if (room.status === 'finished') {
+          const finalResults = {
+            rankings: room.getCurrentRankings(),
+            roundResults: room.roundResults,
+            totalDajares: room.dajareHistory.length,
+            duration: room.endedAt - room.startedAt
+          };
+          this.io.to(room.roomId).emit('game_finished', finalResults);
+        }
+      }
+
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  }
+
+  // 観戦処理
+  handleSpectateRoom(socket, { roomId, spectatorName }) {
+    try {
+      const room = this.multiplayManager.getRoom(roomId);
+      if (!room) {
+        throw new Error('ルームが見つかりません');
+      }
+
+      const spectator = room.addSpectator(socket.id, spectatorName);
+      socket.spectatorId = socket.id;
+      socket.roomId = roomId;
+      socket.join(roomId);
+
+      socket.emit('spectate_started', {
+        room: this.getRoomStateForClient(room),
+        spectator,
         gameState: room.getGameState()
       });
 
+      // ルーム内に観戦者が入ったことを通知
+      this.io.to(roomId).emit('spectator_joined', {
+        spectatorName,
+        spectatorCount: room.spectators.size
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  }
+
+  // ルーム一覧取得
+  handleGetRoomList(socket) {
+    try {
+      const rooms = this.multiplayManager.getAllRooms();
+      socket.emit('room_list', { rooms });
     } catch (error) {
       socket.emit('error', { message: error.message });
     }
@@ -254,53 +310,54 @@ class WebSocketHandler {
 
   // 切断処理
   handleDisconnect(socket) {
-    console.log(`🔌 Player disconnected: ${socket.id}`);
-    
-    if (socket.playerId) {
-      try {
-        const room = gameService.leaveRoom(socket.playerId);
-        
-        if (room && socket.roomId) {
-          // ルーム内の他プレイヤーに通知
-          this.io.to(socket.roomId).emit('player_left', {
-            playerId: socket.playerId,
-            room: this.getRoomStateForClient(room),
-            message: `${socket.playerName || 'プレイヤー'}が退出しました`
-          });
+    try {
+      console.log(`🔌 Player disconnected: ${socket.id}`);
+
+      if (socket.playerId) {
+        const room = this.multiplayManager.getPlayerRoom(socket.playerId);
+        if (room) {
+          const shouldDeleteRoom = this.multiplayManager.leaveRoom(socket.playerId);
+          
+          if (!shouldDeleteRoom) {
+            // ルームが残っている場合、他のプレイヤーに通知
+            this.io.to(room.roomId).emit('player_disconnected', {
+              playerId: socket.playerId,
+              playerName: socket.playerName,
+              room: this.getRoomStateForClient(room)
+            });
+          }
         }
-      } catch (error) {
-        console.error('Error handling disconnect:', error);
       }
+    } catch (error) {
+      console.error('Disconnect error:', error);
     }
   }
 
-  // ソケットIDからプレイヤーIDを検索
-  findSocketByPlayerId(playerId) {
-    for (const [id, socket] of this.io.sockets.sockets) {
-      if (socket.playerId === playerId) {
-        return socket;
-      }
-    }
-    return null;
-  }
-
-  // クライアント用にルーム状態を変換
+  // ヘルパーメソッド
   getRoomStateForClient(room) {
     return {
-      id: room.id,
+      roomId: room.roomId,
       status: room.status,
-      players: room.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        isAlive: p.isAlive
-        // 役職は意図的に隠す
+      phase: room.currentPhase,
+      round: room.currentRound,
+      maxRounds: room.gameSettings.maxRounds,
+      players: Array.from(room.players.values()).map(player => ({
+        playerId: player.playerId,
+        playerName: player.playerName,
+        isHost: player.isHost,
+        score: player.score,
+        azukiBarLife: player.azukiBarLife,
+        status: player.status,
+        dajareCount: player.dajareCount
       })),
-      playerCount: room.players.length,
+      spectatorCount: room.spectators.size,
+      hostPlayerId: room.hostPlayerId,
       maxPlayers: room.maxPlayers,
-      azukiBarDurability: room.azukiBarDurability,
-      timeRemaining: room.getRemainingTime()
+      timeRemaining: room.getTimeRemaining()
     };
   }
 }
+
+module.exports = WebSocketHandler;
 
 module.exports = WebSocketHandler;
