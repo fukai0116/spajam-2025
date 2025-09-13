@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AIダジャレ評価システム + あずきバー 🍡</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .azuki-bar {
+            width: 100%;
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        .azuki-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b7a);
+            transition: width 0.5s ease;
+            border-radius: 15px;
+        }
+        .azuki-bar-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .input-area {
+            margin: 20px 0;
+        }
+        .dajare-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .evaluate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .evaluate-btn:hover {
+            transform: translateY(-2px);
+        }
+        .result-area {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .breakdown-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .history {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .history-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AIダジャレ評価システム 🍡</h1>
+        
+        <div class="azuki-bar">
+            <div class="azuki-bar-fill" id="azukiBarFill" style="width: 100%"></div>
+            <div class="azuki-bar-text" id="azukiBarText">🍡 あずきバーライフ: 100/100</div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="dajareInput" class="dajare-input" placeholder="ダジャレを入力してください..." maxlength="100">
+            <button onclick="evaluateDajare()" class="evaluate-btn" id="evaluateBtn">🔥 AIで評価する！</button>
+        </div>
+        
+        <div class="result-area" id="resultArea">
+            <div class="score-display" id="scoreDisplay"></div>
+            <div class="breakdown" id="breakdown"></div>
+            <div id="evaluation"></div>
+            <div id="analysis"></div>
+            <div id="recommendations"></div>
+        </div>
+        
+        <div class="history" id="history" style="display: none;">
+            <h3>📝 評価履歴</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentLife = 100;
+        let history = [];
+
+        // Enterキーで評価実行
+        document.getElementById('dajareInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                evaluateDajare();
+            }
+        });
+
+        async function evaluateDajare() {
+            const dajare = document.getElementById('dajareInput').value.trim();
+            if (!dajare) {
+                alert('ダジャレを入力してください！');
+                return;
+            }
+
+            const btn = document.getElementById('evaluateBtn');
+            const resultArea = document.getElementById('resultArea');
+            
+            // ローディング状態
+            btn.disabled = true;
+            btn.textContent = '🤖 AI評価中...';
+            resultArea.style.display = 'block';
+            resultArea.innerHTML = '<div class="loading">🤖 AIがダジャレを分析中です...</div>';
+
+            try {
+                // サーバーのAI評価APIを呼び出し
+                const response = await fetch('/api/evaluate-dajare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ dajare: dajare })
+                });
+
+                if (!response.ok) {
+                    throw new Error('評価APIエラー');
+                }
+
+                const result = await response.json();
+                displayResult(dajare, result);
+                
+                // あずきバーライフを更新
+                updateAzukiBarLife(result.azukiBarLifeChange || 0);
+                
+                // 履歴に追加
+                addToHistory(dajare, result);
+
+            } catch (error) {
+                console.error('評価エラー:', error);
+                resultArea.innerHTML = '<div style="color: red;">❌ 評価に失敗しました。サーバーが起動していることを確認してください。</div>';
+            }
+
+            // ボタンを元に戻す
+            btn.disabled = false;
+            btn.textContent = '🔥 AIで評価する！';
+            document.getElementById('dajareInput').value = '';
+        }
+
+        function displayResult(dajare, result) {
+            const resultArea = document.getElementById('resultArea');
+            
+            const lifeChangeText = result.azukiBarLifeChange > 0 
+                ? `+${result.azukiBarLifeChange}` 
+                : result.azukiBarLifeChange === 0 
+                ? '±0'
+                : result.azukiBarLifeChange.toString();
+            
+            resultArea.innerHTML = `
+                <div class="score-display">
+                    📊 総合スコア: ${result.score}/10
+                    <div style="font-size: 16px; color: #666;">🍡 ライフ変化: ${lifeChangeText}</div>
+                </div>
+                
+                <div class="breakdown">
+                    <div class="breakdown-item">
+                        <div>🌡️ 温度</div>
+                        <div>${result.breakdown.thermal}</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div>✨ 質</div>
+                        <div>${result.breakdown.quality}</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div>🎨 創造性</div>
+                        <div>${result.breakdown.creativity}</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div>🎵 音韻</div>
+                        <div>${result.breakdown.sound}</div>
+                    </div>
+                </div>
+                
+                <div id="evaluation"><strong>🔥 評価:</strong> ${result.evaluation}</div>
+                <div id="analysis"><strong>📋 分析:</strong> ${result.analysis}</div>
+                <div id="recommendations"><strong>💡 改善提案:</strong> ${result.recommendations.join(', ')}</div>
+            `;
+        }
+
+        function updateAzukiBarLife(change) {
+            currentLife = Math.max(0, Math.min(100, currentLife + change));
+            
+            const fill = document.getElementById('azukiBarFill');
+            const text = document.getElementById('azukiBarText');
+            
+            fill.style.width = currentLife + '%';
+            
+            // ライフに応じて色を変更
+            if (currentLife >= 70) {
+                fill.style.background = 'linear-gradient(90deg, #74b9ff, #0984e3)'; // 青（冷たい）
+                text.textContent = `🧊 あずきバーライフ: ${currentLife}/100`;
+            } else if (currentLife >= 30) {
+                fill.style.background = 'linear-gradient(90deg, #fd79a8, #e84393)'; // ピンク（普通）
+                text.textContent = `🍡 あずきバーライフ: ${currentLife}/100`;
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #ff7675, #d63031)'; // 赤（溶けてる）
+                text.textContent = `💦 あずきバーライフ: ${currentLife}/100`;
+            }
+
+            // 特別な状態のアラート
+            if (currentLife === 0) {
+                alert('🌊 あずきバーが完全に溶けました！ゲームオーバー！');
+            } else if (currentLife === 100 && change > 0) {
+                alert('❄️ あずきバーが完璧な状態で凍りました！');
+            }
+        }
+
+        function addToHistory(dajare, result) {
+            history.unshift({ dajare, result, timestamp: new Date() });
+            
+            const historyElement = document.getElementById('history');
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length > 0) {
+                historyElement.style.display = 'block';
+            }
+            
+            historyList.innerHTML = history.slice(0, 5).map(item => `
+                <div class="history-item">
+                    <strong>"${item.dajare}"</strong><br>
+                    スコア: ${item.result.score}/10 | ライフ変化: ${item.result.azukiBarLifeChange > 0 ? '+' : ''}${item.result.azukiBarLifeChange}<br>
+                    <small>${item.timestamp.toLocaleTimeString()}</small>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

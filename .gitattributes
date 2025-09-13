@@ -1,0 +1,29 @@
+# 改行コードの自動変換設定
+* text=auto
+
+# JSON ファイルは LF で統一
+*.json text eol=lf
+
+# JavaScript/TypeScript ファイルは LF で統一
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+
+# Dart ファイルは LF で統一
+*.dart text eol=lf
+
+# Markdown ファイルは LF で統一
+*.md text eol=lf
+
+# YAML ファイルは LF で統一
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# バイナリファイルは変換しない
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
