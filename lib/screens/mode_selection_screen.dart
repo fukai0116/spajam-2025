@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'single_play_screen.dart';
 
 class ModeSelectionScreen extends StatelessWidget {
   const ModeSelectionScreen({super.key});
@@ -64,7 +65,7 @@ class ModeSelectionScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '・タイムアタックのみ：制限時間内に温度を一定以上まで上げる。',
+                          '・ダジャレでAIが評価し、あずきバーの温度が変化します。\n・寒いダジャレほどあずきバーが溶けます。\n・制限時間内にあずきバーを完全に溶かそう！',
                           style: TextStyle(
                             color: theme.colorScheme.onSurface.withOpacity(0.8),
                             fontSize: 13,
@@ -83,9 +84,13 @@ class ModeSelectionScreen extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + MediaQuery.of(context).padding.bottom),
         child: ElevatedButton(
           onPressed: () {
-            context.go('/game');
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SinglePlayScreen(),
+              ),
+            );
           },
-          child: const Text('タイムアタック'),
+          child: const Text('あずきバー溶かしチャレンジ'),
         ),
       ),
     );

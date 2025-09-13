@@ -70,12 +70,175 @@ app.use(cors(corsOptions)); // CORS設定
 app.use(express.json()); // JSON形式のリクエストを解析
 app.use(express.urlencoded({ extended: true })); // URLエンコードされたリクエストを解析
 
-// 静的ファイル配信（テスト用）
-app.use('/test', express.static('./'));
-
 // ルート設定
 const gameRoutes = require('./routes/game');
 app.use('/api/game', gameRoutes);
+
+// AIダジャレ評価API
+const AdvancedDajareEvaluator = require('./services/openaiDajareEvaluator');
+const SingleGameManager = require('./services/singleGameManager');
+
+const dajareEvaluator = new AdvancedDajareEvaluator();
+const singleGameManager = new SingleGameManager();
+
+// 定期的なセッションクリーンアップ
+setInterval(() => {
+  singleGameManager.cleanupSessions();
+}, 60000); // 1分ごと
+
+app.post('/api/evaluate-dajare', async (req, res) => {
+  try {
+    const { dajare } = req.body;
+    
+    if (!dajare || typeof dajare !== 'string') {
+      return res.status(400).json({
+        error: 'ダジャレが必要です',
+        message: 'dajareフィールドに文字列を指定してください'
+      });
+    }
+
+    // AI評価を実行
+    const evaluation = await dajareEvaluator.evaluateDajare(dajare);
+    
+    res.json({
+      ...evaluation,
+      dajare: dajare,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('ダジャレ評価エラー:', error);
+    res.status(500).json({
+      error: 'AI評価エラー',
+      message: 'ダジャレの評価中にエラーが発生しました'
+    });
+  }
+});
+
+// シングルプレイゲーム開始
+app.post('/api/game/single/start', (req, res) => {
+  try {
+    const { playerId, playerName } = req.body;
+    
+    if (!playerId || !playerName) {
+      return res.status(400).json({
+        error: 'プレイヤー情報が必要です',
+        message: 'playerIdとplayerNameを指定してください'
+      });
+    }
+
+    const gameState = singleGameManager.startGame(playerId, playerName);
+    
+    res.json({
+      success: true,
+      gameState,
+      message: 'ゲームが開始されました！'
+    });
+    
+  } catch (error) {
+    console.error('ゲーム開始エラー:', error);
+    res.status(500).json({
+      error: 'ゲーム開始エラー',
+      message: 'ゲームの開始中にエラーが発生しました'
+    });
+  }
+});
+
+// シングルプレイでダジャレ評価
+app.post('/api/game/single/dajare', async (req, res) => {
+  try {
+    const { playerId, dajare } = req.body;
+    
+    if (!playerId || !dajare) {
+      return res.status(400).json({
+        error: 'プレイヤーIDとダジャレが必要です',
+        message: 'playerIdとdajareを指定してください'
+      });
+    }
+
+    const result = await singleGameManager.evaluateDajare(playerId, dajare);
+    
+    res.json({
+      success: true,
+      result,
+      message: '評価が完了しました'
+    });
+    
+  } catch (error) {
+    console.error('ダジャレ評価エラー:', error);
+    res.status(500).json({
+      error: 'ダジャレ評価エラー',
+      message: error.message
+    });
+  }
+});
+
+// ゲーム状態取得
+app.get('/api/game/single/:playerId/state', (req, res) => {
+  try {
+    const { playerId } = req.params;
+    
+    const gameState = singleGameManager.getGameState(playerId);
+    
+    res.json({
+      success: true,
+      gameState
+    });
+    
+  } catch (error) {
+    console.error('ゲーム状態取得エラー:', error);
+    res.status(404).json({
+      error: 'ゲーム状態取得エラー',
+      message: error.message
+    });
+  }
+});
+
+// ゲーム終了
+app.post('/api/game/single/:playerId/end', (req, res) => {
+  try {
+    const { playerId } = req.params;
+    
+    const report = singleGameManager.endGame(playerId);
+    
+    res.json({
+      success: true,
+      report,
+      message: 'ゲームが終了しました'
+    });
+    
+  } catch (error) {
+    console.error('ゲーム終了エラー:', error);
+    res.status(500).json({
+      error: 'ゲーム終了エラー',
+      message: error.message
+    });
+  }
+});
+
+// ゲームレポート取得
+app.get('/api/game/single/:playerId/report', (req, res) => {
+  try {
+    const { playerId } = req.params;
+    
+    const report = singleGameManager.getGameReport(playerId);
+    
+    res.json({
+      success: true,
+      report
+    });
+    
+  } catch (error) {
+    console.error('レポート取得エラー:', error);
+    res.status(404).json({
+      error: 'レポート取得エラー',
+      message: error.message
+    });
+  }
+});
+
+// 静的ファイル配信（テスト用HTML含む）
+app.use(express.static('./'));
 
 // ルートエンドポイント
 app.get('/', (req, res) => {
