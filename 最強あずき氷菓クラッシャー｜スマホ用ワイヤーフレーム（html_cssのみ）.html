@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>最強あずき氷菓クラッシャー｜Wireframe</title>
+  <style>
+    :root{
+      /* 和風・あずきバー配色（さらに濃い） */
+      --bg:#e7d8ce;
+      --ink:#1e1313;
+      --muted:#5a2e2e;
+      --line:#b79b90;
+      --accent:#4a1717;
+      --panel:#ffe7d6;
+      --chip:#e1c2b8;
+      --safe-area-bottom: env(safe-area-inset-bottom);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Meiryo", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.4;
+    }
+
+    .screen{ position: relative; min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+    header{ padding: 16px 16px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+    header .title{ font-size: 16px; letter-spacing: .02em; }
+    header .sub{ color: var(--muted); font-size: 12px; }
+    main{ padding: 16px; }
+    footer{ padding: 12px 16px calc(12px + var(--safe-area-bottom)); background: var(--panel); border-top: 1px solid var(--line); display: grid; gap: 8px; }
+
+    .btn{ display: inline-grid; place-items:center; border: 1px solid var(--accent); padding: 12px 14px; border-radius: 12px; width: 100%; background: #fff2ea; color: var(--ink); text-decoration: none; font-weight: 700; }
+    .btn.secondary{ border-style: solid; color:#3a211f; background:#f5d8d2; }
+    .btn.ghost{ border-color: var(--line); background: transparent; font-weight: 600; }
+    .btn-row{ display: grid; grid-template-columns: 1fr; gap: 10px; }
+
+    .card{ background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
+    .card .heading{ font-size: 14px; color: #4b2f2f; }
+
+    .view{ display: none; }
+    .view:target{ display: block; }
+    #start:target, body:not(:target) #start{ display:block; }
+
+    .logo{ display:grid; place-items:center; height: 140px; border:1px dashed var(--muted); border-radius: 16px; color: var(--muted); }
+    .mode-grid{ display:grid; gap:10px; }
+
+    .centered{ display:grid; place-items:center; gap:12px; text-align:center; }
+    .spinner{ width: 36px; height: 36px; border: 3px dashed var(--muted); border-radius: 999px; }
+    .match-code{ font: 700 18px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+
+    .players{ display:flex; gap:6px; flex-wrap: wrap; }
+    .chip{ background: var(--chip); border:1px dashed var(--line); padding:6px 10px; border-radius:999px; font-size:12px; }
+    .timer-text{ font: 800 22px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.04em; text-align:center; color:var(--ink);} 
+
+    .ice-area{ display:grid; grid-template-columns: 1fr; gap: 16px; align-items:center; }
+    .ice{
+      position: relative;
+      height: 460px; /* 縦幅を拡大 */
+      border-radius: 24px; border: 2px dashed var(--muted);
+      background: repeating-linear-gradient(45deg,#fff5ef 0 12px,#ffe6dc 12px 24px);
+      display:grid; place-items:center; color:var(--muted); overflow:hidden;
+    }
+
+    /* 入力オーバーレイ（下端貼り付け、半透明、ぼかし） */
+    .overlay-input{
+      position:absolute; left:12px; right:12px; bottom:12px;
+      background: rgba(255, 231, 214, 0.9);
+      border:1px solid var(--line); border-radius:14px; padding:8px;
+      backdrop-filter: blur(4px);
+    }
+    .overlay-input .input-row{ display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; }
+    .overlay-input .input{ width:100%; padding:12px; border:1px dashed var(--line); border-radius:12px; background:#fff; }
+    .overlay-input .input.has-send{ padding-right:88px; }
+    .overlay-input .send-btn{
+      position:absolute; right:18px; top:50%; transform: translateY(-50%);
+      width:40px; height:36px; border:1px solid var(--accent); border-radius:10px;
+      display:grid; place-items:center; background:#fff2ea; font-weight:700;
+    }
+    .overlay-input .icon-btn{
+      width:44px; height:44px; border:1px solid var(--accent);
+      border-radius:12px; display:grid; place-items:center; background:#fff;
+    }
+
+    /* 結果画面 */
+    .score-list{ display:grid; gap:8px; }
+    .score-row{ display:flex; justify-content:space-between; align-items:center; border:1px dashed var(--line); border-radius:12px; padding:10px 12px; }
+    .badge{ font-size:10px; border:1px solid var(--line); padding:3px 6px; border-radius:999px; color:#3e2a2a; }
+    .result-hero{ display:grid; place-items:center; gap:6px; padding:24px; border:1px solid var(--accent); background:#fff2ea; border-radius:18px; }
+    .result-hero .victory{ font-weight:900; font-size:28px; letter-spacing:.04em; color:#3b1212; }
+    .result-hero .meta{ font-weight:700; font-size:14px; color:#5a2e2e; }
+
+    .top-actions{ display:flex; gap:8px; }
+    .back{ text-decoration:none; color:#4d3a3a; font-size:14px; }
+
+    @media (max-width: 360px){
+      .ice{ height:340px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Start -->
+  <section id="start" class="screen view" aria-label="スタート画面">
+    <header>
+      <div class="title">最強あずき氷菓クラッシャー</div>
+      <div class="sub">オンライン・アイスブレイク用ゲーム（ワイヤーフレーム）</div>
+    </header>
+    <main>
+      <div class="logo">LOGO / KEY VISUAL</div>
+      <div class="card">
+        <div class="heading">プレイモード</div>
+        <div class="btn-row">
+          <a class="btn" href="#mode">シングルプレイ</a>
+          <a class="btn" href="#matching">マルチプレイ</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="heading">説明（ワイヤーフレーム）</div>
+        <p style="margin:0;color:#4b2f2f;font-size:13px;">ダジャレの面白さをAIが評価し、あずきバーの温度が上下。時間内に溶かせば市民勝利、凍らせたままなら人狼勝利。</p>
+      </div>
+    </main>
+    <footer>
+      <a class="btn ghost" href="#start">この画面は仮の配置です（説明のみ）</a>
+    </footer>
+  </section>
+
+  <!-- Mode -->
+  <section id="mode" class="screen view" aria-label="モード選択">
+    <header>
+      <div class="top-actions"><a class="back" href="#start">← 戻る</a></div>
+      <div class="title">モード選択</div>
+      <div class="sub">シングルプレイ</div>
+    </header>
+    <main>
+      <div class="card">
+        <div class="mode-grid">
+          <a class="btn" href="#game">タイムアタック</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="heading">補足</div>
+        <ul style="margin:0 0 0 1em; padding:0; color:#4b2f2f; font-size:13px;">
+          <li>タイムアタックのみ：制限時間内に温度を一定以上まで上げる。</li>
+        </ul>
+      </div>
+    </main>
+    <footer>
+      <a class="btn" href="#game">この設定で開始</a>
+    </footer>
+  </section>
+
+  <!-- Matching -->
+  <section id="matching" class="screen view" aria-label="マッチング画面">
+    <header>
+      <div class="top-actions"><a class="back" href="#start">← ホーム</a></div>
+      <div class="title">マッチング</div>
+      <div class="sub">近いルームを検索中</div>
+    </header>
+    <main class="centered">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="match-code">ルーム1</div>
+      <div class="card" style="width:100%; max-width:420px; text-align:left;">
+        <div class="heading">参加予定プレイヤー（最大4人）</div>
+        <div class="players">
+          <span class="chip">hikari</span>
+          <span class="chip">suzu</span>
+          <span class="chip">rin</span>
+          <span class="chip">（空き）</span>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <div class="btn-row">
+        <a class="btn" href="#game">準備OK → ゲーム開始</a>
+        <a class="btn ghost" href="#start">キャンセル</a>
+      </div>
+    </footer>
+  </section>
+
+  <!-- Game -->
+  <section id="game" class="screen view" aria-label="ゲーム画面">
+    <header>
+      <div class="title">ゲーム</div>
+      <div class="sub">ダジャレで温度を上げよう</div>
+    </header>
+    <main>
+      <div class="timer-text" aria-live="polite">01:30</div>
+
+      <div class="ice-area" style="margin-top:8px;">
+        <div class="ice">
+          <img src="https://image.itmedia.co.jp/lifestyle/articles/1705/22/ts_takaratomyarts10.jpg" alt="あずきバー" style="max-width:100%; height:100%; object-fit:cover;" />
+          <!-- ▼ オーバーレイ：ダジャレ入力（最小構成） -->
+          <div class="overlay-input">
+            <div class="input-row">
+              <div class="input-wrap" style="position:relative; width:100%;">
+                <input class="input has-send" type="text" placeholder="例：あずきバー、味は“あずきっ”と驚く旨さ！" />
+                <button class="send-btn" type="button" aria-label="送信（ダミー）">➤</button>
+              </div>
+              <button class="icon-btn" type="button" aria-label="音声入力（ダミー）">🎤</button>
+            </div>
+          </div>
+          <!-- ▲ オーバーレイここまで -->
+        </div>
+      </div>
+
+      <!-- 下のカードは削除済み（見出し・注意文なしの最小構成） -->
+    </main>
+    <footer>
+      <div class="players" style="margin-bottom:8px;">
+        <span class="chip">you</span>
+        <span class="chip">hikari</span>
+        <span class="chip">suzu</span>
+        <span class="chip">rin</span>
+      </div>
+      <div class="btn-row">
+        <a class="btn secondary" href="#result">時間切れ → 結果へ</a>
+      </div>
+    </footer>
+  </section>
+
+  <!-- Result -->
+  <section id="result" class="screen view" aria-label="結果表示画面">
+    <header>
+      <div class="title">結果</div>
+      <div class="sub">市民 vs 人狼</div>
+    </header>
+    <main>
+      <div class="card result-hero"><div class="victory">市民陣営 勝利</div><div class="meta">最終温度： +18℃</div></div>
+
+      <div class="card">
+        <div class="heading">プレイヤー別スコア</div>
+        <div class="score-list">
+          <div class="score-row"><span>you</span><span>120 pt</span></div>
+          <div class="score-row"><span>hikari</span><span>110 pt</span></div>
+          <div class="score-row"><span>suzu</span><span>70 pt</span></div>
+          <div class="score-row"><span>rin <span class="badge">人狼</span></span><span>-40 pt</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="heading">リトライ</div>
+        <div class="btn-row">
+          <a class="btn secondary" href="#matching">再戦する</a>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <a class="btn ghost" href="#start">トップに戻る</a>
+    </footer>
+  </section>
+
+</body>
+</html>
