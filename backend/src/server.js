@@ -8,6 +8,12 @@ const WebSocketHandler = require('./services/webSocketHandler');
 // 環境変数の読み込み
 dotenv.config();
 
+// 環境変数の確認
+console.log('🔧 Environment Variables Check:');
+console.log(`NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+console.log(`PORT: ${process.env.PORT || 'undefined'}`);
+console.log(`OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`);
+
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
@@ -303,7 +309,7 @@ app.use((err, req, res, next) => {
 });
 
 // サーバー起動
-httpServer.listen(PORT, '0.0.0.0', () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 SPAJAM 2025 Backend Server started!`);
   console.log(`📊 Environment: ${NODE_ENV}`);
   console.log(`🌐 Port: ${PORT}`);
