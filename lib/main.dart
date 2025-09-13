@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFE7D8CE),
         primaryColor: const Color(0xFF4A1717),
-        fontFamily: 'ui-sans-serif', // This is a fallback, will use system default
+        fontFamily: 'Noto Serif JP',
         textTheme: const TextTheme(
           bodyMedium: TextStyle(color: Color(0xFF1E1313)),
           titleLarge: TextStyle(color: Color(0xFF1E1313)),
