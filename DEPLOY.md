@@ -15,7 +15,7 @@
 **Basic Info:**
 - Name: `spajam2025-backend`
 - Branch: `feature/fukai-01`
-- Root Directory: `backend`
+- Root Directory: `backend` ⚠️ **重要: 必ずbackendを指定**
 
 **Build & Deploy:**
 - Runtime: `Node`
@@ -26,6 +26,12 @@
 - `NODE_ENV`: `production`
 - `PORT`: `3000`
 - `OPENAI_API_KEY`: `[OpenAI APIキーを設定]`
+
+### 3-2. 📝 重要な設定ポイント
+1. **Root Directory**: 必ず `backend` を設定してください
+2. **Build Command**: `npm ci` のみ（cdコマンドは不要）
+3. **Start Command**: `npm start` のみ（cdコマンドは不要）
+4. Root Directoryを設定すると、Render.comが自動的にbackendフォルダを基準にします
 
 ### 4. デプロイ実行
 1. 「Create Web Service」をクリック
@@ -146,14 +152,37 @@ lib/
 
 ### よくある問題
 
-1. **CORS エラー**
+1. **npm start エラー (Missing script: "start")**
+   - Root Directoryが `backend` に設定されているか確認
+   - Build Command: `npm ci` (cdコマンドなし)
+   - Start Command: `npm start` (cdコマンドなし)
+
+2. **CORS エラー**
    - server.jsのallowedOriginsにフロントエンドのURLを追加
 
-2. **WebSocket接続エラー**
+3. **WebSocket接続エラー**
    - HTTPSが必要（Render.comは自動で提供）
 
-3. **OpenAI API エラー**
+4. **OpenAI API エラー**
    - 環境変数 `OPENAI_API_KEY` が正しく設定されているか確認
+
+### デプロイエラーの対処法
+
+**エラー: "npm error Missing script: start"**
+```bash
+# 解決策:
+1. Render.comダッシュボードで設定を確認
+2. Root Directory = "backend" に設定
+3. Build Command = "npm ci" に設定
+4. Start Command = "npm start" に設定
+```
+
+**エラー: "Cannot find module"**
+```bash
+# 解決策:
+1. package.jsonの依存関係を確認
+2. Build Commandで npm ci が実行されているか確認
+```
 
 ### ログ確認
 Render.comのダッシュボードでリアルタイムログを確認できます。
