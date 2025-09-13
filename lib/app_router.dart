@@ -12,16 +12,14 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const StartScreen(),
-      routes: [
-        GoRoute(
-          path: 'mode',
-          builder: (context, state) => const ModeSelectionScreen(),
-        ),
-        GoRoute(
-          path: 'matching',
-          builder: (context, state) => const MatchingScreen(),
-        ),
-      ],
+    ),
+    GoRoute(
+      path: '/mode',
+      builder: (context, state) => const ModeSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/matching',
+      builder: (context, state) => const MatchingScreen(),
     ),
     GoRoute(
       path: '/game',
