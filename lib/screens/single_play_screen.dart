@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 import '../services/single_game_service.dart';
 import 'dart:async';
 
@@ -304,8 +305,8 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
             // ゲーム終了ボタン
             ElevatedButton(
               onPressed: _endGame,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('ゲーム終了', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: azukiColor),
+              child: const Text('ゲーム終了', style: TextStyle(color: creamColor)),
             ),
           ],
         ),

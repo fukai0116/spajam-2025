@@ -34,7 +34,7 @@ class GameWebSocketService {
     _playerId = playerId;
     _playerName = playerName;
 
-    final url = serverUrl ?? AppConfig.serverUrl;
+    final url = serverUrl ?? AppConfig.webSocketUrl;
     developer.log('🔌 WebSocket接続開始: $url');
     developer.log('👤 プレイヤー情報: $playerName ($playerId)');
 

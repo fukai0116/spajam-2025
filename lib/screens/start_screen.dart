@@ -109,26 +109,26 @@ class StartScreen extends StatelessWidget {
                             onPressed: () {
                               context.push('/mode');
                             },
-                            child: const Text('シングルプレイ'),
+                            child: const Text('ゲームスタート'),
                           ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              context.push('/matching');
-                            },
-                            child: const Text('マルチプレイ'),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              context.push('/test');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade100,
-                              foregroundColor: Colors.blue.shade800,
-                            ),
-                            child: const Text('WebSocketテスト'),
-                          ),
+                          // const SizedBox(height: 10),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     context.push('/matching');
+                          //   },
+                          //   child: const Text('マルチプレイ'),
+                          // ),
+                          // const SizedBox(height: 10),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     context.push('/test');
+                          //   },
+                          //   style: ElevatedButton.styleFrom(
+                          //     backgroundColor: Colors.blue.shade100,
+                          //     foregroundColor: Colors.blue.shade800,
+                          //   ),
+                          //   child: const Text('WebSocketテスト'),
+                          // ),
                         ],
                       ),
                     ),

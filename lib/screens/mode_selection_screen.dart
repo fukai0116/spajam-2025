@@ -1,8 +1,71 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:spajam2025/config/app_config.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 
-class ModeSelectionScreen extends StatelessWidget {
+class ModeSelectionScreen extends StatefulWidget {
   const ModeSelectionScreen({super.key});
+
+  @override
+  State<ModeSelectionScreen> createState() => _ModeSelectionScreenState();
+}
+
+class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
+  bool _isServerOnline = false;
+  bool _isLoading = true;
+  String? _connectionError;
+  Timer? _healthCheckTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServerStatus();
+    _healthCheckTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _checkServerStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _healthCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkServerStatus() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/health')).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            _isServerOnline = true;
+            _connectionError = null;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isServerOnline = false;
+            _connectionError = 'サーバーに接続できませんでした';
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isServerOnline = false;
+          _connectionError = 'サーバーに接続できませんでした';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +145,7 @@ class ModeSelectionScreen extends StatelessWidget {
                   onPressed: () => context.push('/mode/single_play'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: creamColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Row(
@@ -102,13 +165,39 @@ class ModeSelectionScreen extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 12),
+
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (_connectionError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          _connectionError!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            _checkServerStatus();
+                          },
+                          child: const Text('再接続'),
+                        ),
+                      ],
+                    ),
+                  ),
                 
                 // マルチプレイボタン
                 ElevatedButton(
-                  onPressed: () => context.push('/multiplay'),
+                  onPressed: _isServerOnline ? () => context.push('/multiplay') : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: azukiColor,
+                    foregroundColor: creamColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Row(

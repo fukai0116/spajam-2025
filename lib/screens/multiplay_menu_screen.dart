@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:spajam2025/config/color_schemes.dart';
 import '../services/multiplay_game_service.dart';
 import '../config/app_config.dart';
 
@@ -97,20 +98,30 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
     );
   }
 
+  void _cancelConnection() {
+    _gameService.disconnect();
+    if (mounted) {
+      setState(() {
+        _isConnecting = false;
+        _connectionError = '接続がキャンセルされました';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('マルチプレイ'),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
+        title: const Text(' マルチプレイ'),
+        backgroundColor: azukiColor,
+        foregroundColor: creamColor,
       ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange, Colors.deepOrange],
+            colors: [azukiColor, Colors.black],
           ),
         ),
         child: SafeArea(
@@ -126,7 +137,7 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: creamColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -137,7 +148,7 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: creamColor.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
@@ -156,7 +167,7 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: creamColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -196,16 +207,16 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                     decoration: BoxDecoration(
                       color: Colors.red.shade100,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red),
+                      border: Border.all(color: Colors.black),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error, color: Colors.red),
+                        const Icon(Icons.error, color: Colors.black),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _connectionError!,
-                            style: const TextStyle(color: Colors.red),
+                            style: const TextStyle(color: Colors.black),
                           ),
                         ),
                       ],
@@ -218,36 +229,37 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isConnecting ? null : _connectToServer,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.deepOrange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isConnecting
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              SizedBox(width: 12),
-                              Text('接続中...'),
-                            ],
-                          )
-                        : const Text(
+                  child: _isConnecting
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(strokeWidth: 2),
+                            const SizedBox(width: 12),
+                            const Text('接続中...'),
+                            const SizedBox(width: 12),
+                            TextButton(
+                              onPressed: _cancelConnection,
+                              child: const Text('キャンセル'),
+                            ),
+                          ],
+                        )
+                      : ElevatedButton(
+                          onPressed: _connectToServer,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: creamColor,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
                             'ゲームに参加',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                  ),
+                        ),
                 ),
                 
                 const Spacer(),
@@ -258,7 +270,7 @@ class _MultiplayMenuScreenState extends State<MultiplayMenuScreen> {
                   child: const Text(
                     'メニューに戻る',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: creamColor,
                       fontSize: 16,
                     ),
                   ),
