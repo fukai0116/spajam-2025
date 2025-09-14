@@ -2,26 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key});
+  final Map<String, dynamic>? data;
+  const ResultScreen({super.key, this.data});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Dummy data
-    final scores = [
-      {'name': 'you', 'score': 120, 'isWolf': false},
-      {'name': 'hikari', 'score': 110, 'isWolf': false},
-      {'name': 'suzu', 'score': 70, 'isWolf': false},
-      {'name': 'rin', 'score': -40, 'isWolf': true},
+    final playerName = (data?['playerName'] as String?)?.trim();
+    final score = (data?['score'] as int?) ?? 0;
+    final endReason = (data?['endReason'] as String?) ?? '';
+    final isWerewolfWin = endReason == 'timeout';
+    final resultTitle = isWerewolfWin ? '人狼陣営 勝利' : '市民陣営 勝利';
+    final rankings = [
+      {
+        'name': (playerName?.isNotEmpty == true) ? playerName : 'あなた',
+        'score': score,
+      },
+      // 追加のランキングがある場合はここにpush（マルチ時想定）
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '結果',
-          style: TextStyle(fontSize: 16, letterSpacing: 0.02),
-        ),
+        title: const Text('結果', style: TextStyle(fontSize: 16, letterSpacing: 0.02)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(20.0),
           child: Padding(
@@ -57,7 +60,7 @@ class ResultScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        '市民陣営 勝利',
+                        resultTitle,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.04,
@@ -65,56 +68,39 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        '最終温度： +18℃',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF5A2E2E),
-                        ),
-                      ),
+                      // 追加で詳細を出したければここに統計表示
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Scores
+                // Rankings
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'プレイヤー別スコア',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
+                        Text('ランキング', style: TextStyle(fontSize: 14, color: theme.colorScheme.secondary)),
                         const SizedBox(height: 12),
-                        ...scores.map((score) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(score['name'] as String),
-                                  if (score['isWolf'] as bool) ...[
-                                    const SizedBox(width: 8),
-                                    Chip(
-                                      label: const Text('人狼'),
-                                      labelStyle: const TextStyle(fontSize: 10),
-                                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                                      visualDensity: VisualDensity.compact,
-                                      backgroundColor: theme.dividerColor,
-                                    )
-                                  ]
-                                ],
-                              ),
-                              Text('${score['score']} pt'),
-                            ],
+                        for (int index = 0; index < rankings.length; index++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text('${index + 1}位: '),
+                                    Text(
+                                      (rankings[index]['name'] as String),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                Text('${rankings[index]['score']} pt'),
+                              ],
+                            ),
                           ),
-                        )),
                       ],
                     ),
                   ),
@@ -137,7 +123,7 @@ class ResultScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () {
-                            context.go('/matching');
+                            context.go('/mode/single_play');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.secondary.withOpacity(0.8),

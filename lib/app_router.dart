@@ -35,7 +35,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/result',
-      builder: (context, state) => const ResultScreen(),
+      builder: (context, state) {
+        final extra = state.extra;
+        return ResultScreen(data: extra is Map<String, dynamic> ? extra : null);
+      },
     ),
     GoRoute(
       path: '/multiplay',
