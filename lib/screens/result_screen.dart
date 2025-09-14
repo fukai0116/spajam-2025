@@ -13,14 +13,17 @@ class ResultScreen extends StatelessWidget {
     final score = (data?['score'] as int?) ?? 0;
     final endReason = (data?['endReason'] as String?) ?? '';
     final role = (data?['role'] as String?) ?? '';
-    final isDisturberWin = endReason == 'timeout';
+    final winner = (data?['winner'] as String?)?.trim();
+    // 勝敗タイトル：マルチはwinner優先、シングルはendReasonで判定
+    final isDisturberWin = winner != null ? (winner == '和を乱す人' || winner == '和を乱す人陣営') : (endReason == 'timeout');
     final resultTitle = isDisturberWin ? '和を乱す人陣営 勝利' : '和やかな人陣営 勝利';
-    final rankings = [
+    // ランキング：マルチは渡されたrankingsを使用、なければ自分のみ
+    final providedRankings = (data?['rankings'] as List?)?.cast<Map<String, dynamic>>();
+    final rankings = providedRankings ?? [
       {
         'name': (playerName?.isNotEmpty == true) ? playerName : 'あなた',
         'score': score,
       },
-      // 追加のランキングがある場合はここにpush（マルチ時想定）
     ];
 
     return Scaffold(

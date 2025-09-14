@@ -101,7 +101,14 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           });
           break;
         case 'game_ended':
-          _showGameResults(update['data']);
+          final data = update['data'] ?? {};
+          // 結果画面（シングルと同様の画面）へ遷移
+          if (mounted) {
+            context.pushReplacement('/result', extra: {
+              'winner': data['winner'],
+              'rankings': data['rankings'] ?? [],
+            });
+          }
           break;
         case 'game_finished':
           _showGameResults(update['data']);

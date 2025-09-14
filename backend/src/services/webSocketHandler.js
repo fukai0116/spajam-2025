@@ -245,6 +245,7 @@ class WebSocketHandler {
             room.endGame();
             this.io.to(room.roomId).emit('game_ended', {
               winner,
+              rankings: room.getCurrentRankings(),
               gameState: room.getGameState(),
             });
             clearInterval(room._tickTimer);
@@ -293,6 +294,7 @@ class WebSocketHandler {
         room.endGame();
         this.io.to(room.roomId).emit('game_ended', {
           winner,
+          rankings: room.getCurrentRankings(),
           gameState: room.getGameState(),
         });
       }
