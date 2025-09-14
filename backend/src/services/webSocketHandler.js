@@ -89,6 +89,12 @@ class WebSocketHandler {
     try {
       const room = this.multiplayManager.createRoom(playerId, playerName, maxPlayers);
       
+      // ラウンド遷移のコールバックを設定
+      room.onNextRound = (gameState) => {
+        console.log(`🔄 ルーム ${room.roomId} 次のラウンド開始を全員に通知`);
+        this.io.to(room.roomId).emit('next_round_started', { gameState });
+      };
+      
       socket.playerId = playerId;
       socket.roomId = room.roomId;
       socket.join(room.roomId);
@@ -133,6 +139,14 @@ class WebSocketHandler {
   handleAutoMatch(socket, { playerId, playerName }) {
     try {
       const { room, player, isNewRoom } = this.multiplayManager.autoMatch(playerId, playerName);
+      
+      // ラウンド遷移のコールバックを設定（新規ルームの場合）
+      if (isNewRoom) {
+        room.onNextRound = (gameState) => {
+          console.log(`🔄 ルーム ${room.roomId} 次のラウンド開始を全員に通知`);
+          this.io.to(room.roomId).emit('next_round_started', { gameState });
+        };
+      }
       
       socket.playerId = playerId;
       socket.roomId = room.roomId;
@@ -219,10 +233,12 @@ class WebSocketHandler {
       // 投票フェーズ開始チェック
       if (room.currentPhase === 'voting') {
         const votingState = room.getVotingState();
+        console.log(`🗳️ ルーム ${room.roomId} 投票フェーズ開始を全員に通知`);
         this.io.to(room.roomId).emit('voting_started', votingState);
       }
 
     } catch (error) {
+      console.error(`❌ ダジャレ投稿エラー (${playerId}):`, error.message);
       socket.emit('error', { message: error.message });
     }
   }
@@ -249,21 +265,31 @@ class WebSocketHandler {
       // 結果フェーズ開始チェック
       if (room.currentPhase === 'result') {
         const roundResult = room.roundResults[room.roundResults.length - 1];
-        this.io.to(room.roomId).emit('round_result', roundResult);
-
-        // ゲーム終了チェック
-        if (room.status === 'finished') {
-          const finalResults = {
-            rankings: room.getCurrentRankings(),
-            roundResults: room.roundResults,
-            totalDajares: room.dajareHistory.length,
-            duration: room.endedAt - room.startedAt
-          };
-          this.io.to(room.roomId).emit('game_finished', finalResults);
-        }
+        console.log(`📊 ルーム ${room.roomId} ラウンド結果を全員に通知`);
+        
+        // 少し遅延させて結果を送信（投票状況の更新後）
+        setTimeout(() => {
+          this.io.to(room.roomId).emit('round_result', roundResult);
+          
+          // ゲーム終了チェック
+          if (room.status === 'finished') {
+            const finalResults = {
+              rankings: room.getCurrentRankings(),
+              roundResults: room.roundResults,
+              totalDajares: room.dajareHistory.length,
+              duration: room.endedAt - room.startedAt
+            };
+            console.log(`🏁 ルーム ${room.roomId} ゲーム終了を全員に通知`);
+            this.io.to(room.roomId).emit('game_finished', finalResults);
+          } else {
+            // 次のラウンド開始は自動的にMultiplayGameManagerが処理
+            console.log(`🔄 ルーム ${room.roomId} 次のラウンド準備中...`);
+          }
+        }, 2000); // 2秒遅延
       }
 
     } catch (error) {
+      console.error(`❌ 投票エラー (${playerId}):`, error.message);
       socket.emit('error', { message: error.message });
     }
   }
@@ -357,7 +383,5 @@ class WebSocketHandler {
     };
   }
 }
-
-module.exports = WebSocketHandler;
 
 module.exports = WebSocketHandler;

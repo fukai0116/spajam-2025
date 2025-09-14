@@ -182,9 +182,10 @@ class MultiplayGameRoom {
 
     console.log(`🗳️ ルーム ${this.roomId} で投票フェーズ開始`);
 
-    // 投票時間後に自動的に結果フェーズへ移行
-    setTimeout(() => {
+    // 投票時間後に自動的に結果フェーズへ移行（タイマーIDを保存）
+    this.votingTimer = setTimeout(() => {
       if (this.currentPhase === 'voting') {
+        console.log(`⏰ ルーム ${this.roomId} 投票時間終了、結果処理開始`);
         this.processVotingResults();
       }
     }, this.gameSettings.votingTime);
@@ -192,7 +193,8 @@ class MultiplayGameRoom {
     return {
       phase: 'voting',
       dajares: currentRoundDajares,
-      timeLimit: this.gameSettings.votingTime
+      timeLimit: this.gameSettings.votingTime,
+      startedAt: Date.now()
     };
   }
 
@@ -229,11 +231,22 @@ class MultiplayGameRoom {
       targetDajare.voters.push(playerId);
     }
 
-    console.log(`🗳️ ${player.playerName} が投票しました`);
+    console.log(`🗳️ ${player.playerName} が投票しました (ダジャレID: ${dajareId})`);
 
     // 全員投票完了チェック
     if (this.hasAllPlayersVoted()) {
-      this.processVotingResults();
+      console.log(`✅ ルーム ${this.roomId} 全員投票完了、結果処理開始`);
+      // タイマーをキャンセルして即座に結果処理
+      if (this.votingTimer) {
+        clearTimeout(this.votingTimer);
+        this.votingTimer = null;
+      }
+      // 少し遅延させて処理（UIの更新時間を確保）
+      setTimeout(() => {
+        if (this.currentPhase === 'voting') {
+          this.processVotingResults();
+        }
+      }, 1000);
     }
 
     return this.getVotingState();
@@ -241,7 +254,18 @@ class MultiplayGameRoom {
 
   // 投票結果処理
   processVotingResults() {
+    if (this.currentPhase !== 'voting') {
+      console.log(`⚠️ ルーム ${this.roomId} 投票フェーズではないため結果処理をスキップ`);
+      return null;
+    }
+
     this.currentPhase = 'result';
+
+    // タイマーをクリア
+    if (this.votingTimer) {
+      clearTimeout(this.votingTimer);
+      this.votingTimer = null;
+    }
 
     // 今回のラウンドのダジャレを取得
     const currentRoundDajares = this.dajareHistory.filter(d => d.round === this.currentRound);
@@ -255,7 +279,10 @@ class MultiplayGameRoom {
         // AI評価スコア
         const aiScore = Math.max(0, dajare.evaluation.score) * 10;
         
-        player.score += voteBonus + aiScore;
+        const totalScore = voteBonus + aiScore;
+        player.score += totalScore;
+        
+        console.log(`📊 ${player.playerName}: 投票${dajare.votes}票(+${voteBonus}), AI評価(+${aiScore}) = +${totalScore}`);
       }
     });
 
@@ -263,28 +290,41 @@ class MultiplayGameRoom {
     const roundResult = {
       round: this.currentRound,
       dajares: currentRoundDajares,
-      rankings: this.getCurrentRankings()
+      rankings: this.getCurrentRankings(),
+      processedAt: Date.now()
     };
     this.roundResults.push(roundResult);
 
     console.log(`📊 ルーム ${this.roomId} ラウンド ${this.currentRound} 結果処理完了`);
 
-    // 次のラウンドまたはゲーム終了
-    setTimeout(() => {
+    // 次のラウンドまたはゲーム終了（結果表示時間を確保）
+    this.nextRoundTimer = setTimeout(() => {
       if (this.currentRound < this.gameSettings.maxRounds) {
         this.nextRound();
       } else {
         this.endGame();
       }
-    }, 5000); // 5秒後
+    }, 8000); // 8秒後
 
     return roundResult;
   }
 
   // 次のラウンド
   nextRound() {
+    if (this.currentRound >= this.gameSettings.maxRounds) {
+      console.log(`⚠️ ルーム ${this.roomId} 最終ラウンド到達、ゲーム終了へ`);
+      this.endGame();
+      return null;
+    }
+
     this.currentRound++;
     this.currentPhase = 'dajare';
+
+    // タイマーをクリア
+    if (this.nextRoundTimer) {
+      clearTimeout(this.nextRoundTimer);
+      this.nextRoundTimer = null;
+    }
 
     // プレイヤーの投票状態をリセット
     for (const player of this.players.values()) {
@@ -293,6 +333,12 @@ class MultiplayGameRoom {
     }
 
     console.log(`🔄 ルーム ${this.roomId} ラウンド ${this.currentRound} 開始`);
+    
+    // ラウンド開始のコールバックを追加
+    if (this.onNextRound) {
+      this.onNextRound(this.getGameState());
+    }
+    
     return this.getGameState();
   }
 
