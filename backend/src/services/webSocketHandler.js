@@ -224,37 +224,41 @@ class WebSocketHandler {
         }
       }
 
-      // カウントダウンの定期配信
+      // Start! 表示後にカウント開始（約6秒遅延）
       if (room._tickTimer) {
         clearInterval(room._tickTimer);
         room._tickTimer = null;
       }
-      room._tickTimer = setInterval(() => {
-        try {
-          if (room.status !== 'playing') {
-            clearInterval(room._tickTimer);
-            room._tickTimer = null;
-            return;
-          }
-          const timeRem = room.getTimeRemaining();
-          this.io.to(room.roomId).emit('game_updated', {
-            gameState: room.getGameState(),
-          });
-          if (timeRem <= 0 || (room.azukiBarLife !== undefined && room.azukiBarLife <= 0)) {
-            const winner = (room.azukiBarLife !== undefined && room.azukiBarLife <= 0) ? '和やかな人' : '和を乱す人';
-            room.endGame();
-            this.io.to(room.roomId).emit('game_ended', {
-              winner,
-              rankings: room.getCurrentRankings(),
+      // startedAtを少し先にずらして、残り時間が満タンから始まるようにする
+      room.startedAt = Date.now() + 6000;
+      setTimeout(() => {
+        room._tickTimer = setInterval(() => {
+          try {
+            if (room.status !== 'playing') {
+              clearInterval(room._tickTimer);
+              room._tickTimer = null;
+              return;
+            }
+            const timeRem = room.getTimeRemaining();
+            this.io.to(room.roomId).emit('game_updated', {
               gameState: room.getGameState(),
             });
-            clearInterval(room._tickTimer);
-            room._tickTimer = null;
+            if (timeRem <= 0 || (room.azukiBarLife !== undefined && room.azukiBarLife <= 0)) {
+              const winner = (room.azukiBarLife !== undefined && room.azukiBarLife <= 0) ? '和やかな人' : '和を乱す人';
+              room.endGame();
+              this.io.to(room.roomId).emit('game_ended', {
+                winner,
+                rankings: room.getCurrentRankings(),
+                gameState: room.getGameState(),
+              });
+              clearInterval(room._tickTimer);
+              room._tickTimer = null;
+            }
+          } catch (e) {
+            console.error('Tick error:', e);
           }
-        } catch (e) {
-          console.error('Tick error:', e);
-        }
-      }, 1000);
+        }, 1000);
+      }, 6000);
 
     } catch (error) {
       socket.emit('error', { message: error.message });

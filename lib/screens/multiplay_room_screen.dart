@@ -336,10 +336,45 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
               // メインコンテンツ（協力モードUI）
-              Expanded(child: _gameState != null ? _buildCoopGameArea() : _buildMainContent()),
+              Positioned.fill(
+                child: _gameState != null ? _buildCoopGameArea() : _buildMainContent(),
+              ),
+              // グローバルな役割オーバーレイ（_gameState未設定時も表示）
+              if (_showRoleOverlay && _role != null)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black45,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('役割', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            const SizedBox(height: 8),
+                            Text('あなたは「$_role」です。'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (_showStartBanner)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(12)),
+                        child: const Text('Start!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

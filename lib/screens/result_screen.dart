@@ -106,12 +106,16 @@ class ResultScreen extends StatelessWidget {
                                   children: [
                                     Text('${index + 1}位: '),
                                     Text(
-                                      (rankings[index]['name'] as String),
+                                      (() {
+                                        final item = rankings[index];
+                                        final n = item['name'] ?? item['playerName'] ?? 'プレイヤー';
+                                        return n.toString();
+                                      })(),
                                       style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
-                                Text('${rankings[index]['score']} pt'),
+                                Text('${(rankings[index]['score'] ?? 0).toString()} pt'),
                               ],
                             ),
                           ),
