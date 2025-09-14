@@ -10,7 +10,7 @@ class MultiplayGameRoom {
     this.players = new Map(); // playerId -> PlayerInfo
     this.spectators = new Map(); // spectatorId -> SpectatorInfo
     this.gameSettings = {
-      timeLimit: 5 * 60 * 1000, // 5分
+      timeLimit: 2 * 60 * 1000, // 2分（協力モード）
       votingTime: 30 * 1000, // 30秒
       roundTime: 60 * 1000, // 1分
       maxRounds: 3
@@ -24,6 +24,8 @@ class MultiplayGameRoom {
     this.dajareEvaluator = new AdvancedDajareEvaluator();
     this.currentDajareIndex = 0;
     this.roundResults = [];
+    this.roles = new Map(); // playerId -> role
+    this.azukiBarLife = 100; // shared life for cooperative mode
     this.roles = new Map(); // playerId -> role
     this.azukiBarLife = 100; // shared life
 
@@ -115,7 +117,7 @@ class MultiplayGameRoom {
     for (const player of this.players.values()) {
       player.score = 0;
       player.dajareCount = 0;
-      }
+    }
 
     // 役割割当：1名のみ和を乱す人、他は和やかな人
     const ids = Array.from(this.players.keys());
@@ -143,9 +145,7 @@ class MultiplayGameRoom {
       throw new Error('プレイヤーが見つかりません');
     }
 
-    if (player.lastDajare) {
-      throw new Error('既にダジャレを投稿済みです');
-    }
+    // 協力モードでは連投を許可（ブロックしない）
 
     // AI評価実行
     const evaluation = await this.dajareEvaluator.evaluateDajare(dajare);
@@ -403,7 +403,8 @@ class MultiplayGameRoom {
       maxPlayers: this.maxPlayers,
       hostPlayerId: this.hostPlayerId,
       startedAt: this.startedAt,
-      timeRemaining: this.getTimeRemaining()
+      timeRemaining: this.getTimeRemaining(),
+      azukiBarLife: this.azukiBarLife
     };
   }
 

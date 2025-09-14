@@ -213,6 +213,48 @@ class WebSocketHandler {
         message: 'ゲームが開始されました！'
       });
 
+      // 役割を各プレイヤーに通知
+      if (room.roles) {
+        for (const [pid, p] of room.players) {
+          const s = this.playerSockets.get(pid);
+          if (s) {
+            const role = (room.roles && room.roles.get(pid)) || p.role || '和やかな人';
+            s.emit('role_assigned', { role });
+          }
+        }
+      }
+
+      // カウントダウンの定期配信
+      if (room._tickTimer) {
+        clearInterval(room._tickTimer);
+        room._tickTimer = null;
+      }
+      room._tickTimer = setInterval(() => {
+        try {
+          if (room.status !== 'playing') {
+            clearInterval(room._tickTimer);
+            room._tickTimer = null;
+            return;
+          }
+          const timeRem = room.getTimeRemaining();
+          this.io.to(room.roomId).emit('game_updated', {
+            gameState: room.getGameState(),
+          });
+          if (timeRem <= 0 || (room.azukiBarLife !== undefined && room.azukiBarLife <= 0)) {
+            const winner = (room.azukiBarLife !== undefined && room.azukiBarLife <= 0) ? '和やかな人' : '和を乱す人';
+            room.endGame();
+            this.io.to(room.roomId).emit('game_ended', {
+              winner,
+              gameState: room.getGameState(),
+            });
+            clearInterval(room._tickTimer);
+            room._tickTimer = null;
+          }
+        } catch (e) {
+          console.error('Tick error:', e);
+        }
+      }, 1000);
+
     } catch (error) {
       socket.emit('error', { message: error.message });
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spajam2025/config/color_schemes.dart';
 import '../services/multiplay_game_service.dart';
+import 'package:spajam2025/widgets/azuki_bar_video.dart';
 
 class MultiplayRoomScreen extends StatefulWidget {
   const MultiplayRoomScreen({super.key});
@@ -21,6 +22,10 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
   List<Map<String, dynamic>> _dajareList = [];
   String? _lastMessage;
   bool _isSubmitting = false;
+  String? _role;
+  bool _showRoleOverlay = false;
+  bool _showStartBanner = false;
+  int _sharedLife = 100;
 
   @override
   void initState() {
@@ -56,10 +61,25 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
     // ゲーム更新の監視
     _gameService.gameUpdates.listen((update) {
       switch (update['type']) {
+        case 'role_assigned':
+          setState(() {
+            _role = update['data']?['role'];
+            _showRoleOverlay = true;
+          });
+          Future.delayed(const Duration(seconds: 5), () {
+            if (!mounted) return;
+            setState(() { _showRoleOverlay = false; _showStartBanner = true; });
+            Future.delayed(const Duration(seconds: 1), () {
+              if (!mounted) return;
+              setState(() { _showStartBanner = false; });
+            });
+          });
+          break;
         case 'game_started':
           setState(() {
             _gameState = update['data']['gameState'];
             _lastMessage = update['data']['message'];
+            _sharedLife = (_gameState?['azukiBarLife'] ?? 100) as int;
           });
           break;
         case 'dajare_evaluated':
@@ -71,11 +91,15 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
         case 'game_updated':
           setState(() {
             _gameState = update['data']['gameState'];
+            _sharedLife = (_gameState?['azukiBarLife'] ?? _sharedLife) as int;
             if (update['data']['lastDajare'] != null) {
               final lastDajare = update['data']['lastDajare'];
               _lastMessage = '${lastDajare['playerName']}: ${lastDajare['dajare']}';
             }
           });
+          break;
+        case 'game_ended':
+          _showGameResults(update['data']);
           break;
         case 'game_finished':
           _showGameResults(update['data']);
@@ -254,11 +278,34 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('ルーム ${_gameService.roomId ?? ''}'),
+        title: _buildAppBarTitle(),
+        centerTitle: true,
         backgroundColor: azukiColor,
         foregroundColor: creamColor,
         actions: [
-          if (_roomState?['status'] == 'waiting' && 
+          // 残り時間のチップ
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.timer, size: 16, color: Colors.black87),
+                  const SizedBox(width: 6),
+                  Text(
+                    '残り ${_formatMs((_gameState?['timeRemaining'] ?? 0) as int)}',
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_roomState?['status'] == 'waiting' &&
               _roomState?['hostPlayerId'] == _gameService.playerId)
             IconButton(
               onPressed: _startGame,
@@ -266,6 +313,10 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
               tooltip: 'ゲーム開始',
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: _buildAppBarInfoBar(),
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -278,22 +329,91 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // ステータス表示
-              _buildStatusBar(),
-              
-              // メインコンテンツ
-              Expanded(
-                child: _buildMainContent(),
-              ),
-              
-              // 入力エリア
-              if (_gameState != null && _votingState == null)
-                _buildInputArea(),
+              // メインコンテンツ（協力モードUI）
+              Expanded(child: _gameState != null ? _buildCoopGameArea() : _buildMainContent()),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildAppBarTitle() {
+    final roleText = (_role ?? '').isNotEmpty ? _role! : 'ルーム ${_gameService.roomId ?? ''}';
+    return Text(roleText, style: const TextStyle(fontWeight: FontWeight.bold));
+  }
+
+  Widget _buildAppBarInfoBar() {
+    final playerName = _roomState?['players'] is List
+        ? ((_roomState!['players'] as List).firstWhere(
+              (p) => p['playerId'] == _gameService.playerId,
+              orElse: () => null,
+            )?['playerName'] as String?)
+        : null;
+    final score = _gameState?['players'] is List
+        ? ((_gameState!['players'] as List).firstWhere(
+              (p) => p['playerId'] == _gameService.playerId,
+              orElse: () => null,
+            )?['score'] as int?) ?? 0
+        : 0;
+    final dajareCount = _gameState?['players'] is List
+        ? ((_gameState!['players'] as List).firstWhere(
+              (p) => p['playerId'] == _gameService.playerId,
+              orElse: () => null,
+            )?['dajareCount'] as int?) ?? 0
+        : 0;
+    final life = (_gameState?['azukiBarLife'] ?? _sharedLife) as int;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.person, size: 16, color: Colors.white70),
+              const SizedBox(width: 6),
+              Text(
+                (playerName?.isNotEmpty == true) ? playerName! : 'あなた',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 12),
+              Text('スコア $score', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(width: 12),
+              Text('ダジャレ $dajareCount', style: const TextStyle(color: Colors.white70)),
+              const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.favorite, size: 16, color: Colors.redAccent),
+                  const SizedBox(width: 4),
+                  Text('ライフ $life/100', style: const TextStyle(color: Colors.white)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              minHeight: 6,
+              value: life / 100,
+              backgroundColor: Colors.white24,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                life > 70 ? Colors.lightBlueAccent :
+                life > 30 ? Colors.orangeAccent : Colors.redAccent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatMs(int ms) {
+    final s = (ms / 1000).floor();
+    final m = s ~/ 60;
+    final ss = (s % 60).toString().padLeft(2, '0');
+    return '$m:$ss';
   }
 
   Widget _buildStatusBar() {
@@ -334,13 +454,113 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
   }
 
   Widget _buildMainContent() {
-    if (_votingState != null) {
-      return _buildVotingArea();
-    } else if (_gameState != null) {
+    if (_gameState != null) {
       return _buildGameArea();
-    } else {
-      return _buildWaitingArea();
     }
+    return _buildWaitingArea();
+  }
+
+  // 協力モード用の動画＋UIオーバーレイ
+  Widget _buildCoopGameArea() {
+    final life = _sharedLife;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: AzukiBarVideoWidget(
+            durability: life,
+            background: true,
+            coverScale: 0.9,
+          ),
+        ),
+        if (_lastMessage != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 96,
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black12),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    _lastMessage!,
+                    style: const TextStyle(color: Colors.black87),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          left: 12,
+          right: 12,
+          bottom: 12,
+          child: _buildInputInline(),
+        ),
+        if (_showRoleOverlay && _role != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black45,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('役割', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(height: 8),
+                      Text('あなたは「$_role」です。'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (_showStartBanner)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(12)),
+                  child: const Text('Start!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInputInline() {
+    return Material(
+      color: Colors.transparent,
+      child: TextField(
+        controller: _dajareController,
+        onSubmitted: (_) => _submitDajare(),
+        maxLines: 2,
+        minLines: 1,
+        decoration: InputDecoration(
+          hintText: 'ダジャレを入力…',
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.9),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          suffixIcon: IconButton(
+            onPressed: _isSubmitting ? null : _submitDajare,
+            icon: const Icon(Icons.send_rounded),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildWaitingArea() {

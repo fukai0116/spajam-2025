@@ -152,6 +152,13 @@ class MultiplayGameService {
       });
     });
 
+    _socket!.on('game_ended', (data) {
+      _gameUpdatesController.add({
+        'type': 'game_ended',
+        'data': data,
+      });
+    });
+
     // 投票関連イベント
     _socket!.on('voting_started', (data) {
       _votingUpdatesController.add({
@@ -321,6 +328,12 @@ class MultiplayGameService {
 
   // リソースのクリーンアップ
   void dispose() {
+    _socket!.on('role_assigned', (data) {
+      _gameUpdatesController.add({
+        'type': 'role_assigned',
+        'data': data,
+      });
+    });
     disconnect();
     _roomUpdatesController.close();
     _gameUpdatesController.close();
