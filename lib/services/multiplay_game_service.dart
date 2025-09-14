@@ -124,6 +124,12 @@ class MultiplayGameService {
     });
 
     // ゲーム関連イベント
+    _socket!.on('role_assigned', (data) {
+      _gameUpdatesController.add({
+        'type': 'role_assigned',
+        'data': data,
+      });
+    });
     _socket!.on('game_started', (data) {
       _gameUpdatesController.add({
         'type': 'game_started',
