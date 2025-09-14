@@ -38,18 +38,22 @@ class StartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
-                // Logo / Key Visual
+                // Logo / Key Visual（画像全体が見えるように調整）
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     height: 160,
                     decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
                       border: Border.all(
                         color: theme.colorScheme.secondary.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
-                    child: Image.asset('assets/images/azuki.png', fit: BoxFit.cover),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Image.asset('assets/images/azuki.png'),
+                    ),
                   ),
                 ),
                 // Description card (centered)
