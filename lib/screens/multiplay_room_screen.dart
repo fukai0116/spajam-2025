@@ -26,6 +26,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
   bool _showRoleOverlay = false;
   bool _showStartBanner = false;
   int _sharedLife = 100;
+  // 自動開始は行わず、ホストがボタンで開始
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
             _roomState = update['data']['room'];
             _lastMessage = update['data']['message'];
           });
+          // ホストが人数を見て開始ボタンで開始します（自動開始はしない）
           break;
         case 'player_disconnected':
           setState(() {
