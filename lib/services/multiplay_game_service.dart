@@ -54,13 +54,13 @@ class MultiplayGameService {
       final completer = Completer<bool>();
       _socket!.on('connect', (_) {
         print('🔌 Connected to server');
-        _socket!.emit('player_connect', {
+        _socket!.emit('player_join', {
           'playerId': playerId,
           'playerName': playerName,
         });
       });
 
-      _socket!.on('connect_success', (data) {
+      _socket!.on('join_success', (data) {
         print('✅ Player connected successfully: $data');
         completer.complete(true);
       });
@@ -131,9 +131,9 @@ class MultiplayGameService {
       });
     });
 
-    _socket!.on('dajare_submitted', (data) {
+    _socket!.on('dajare_evaluated', (data) {
       _gameUpdatesController.add({
-        'type': 'dajare_submitted',
+        'type': 'dajare_evaluated',
         'data': data,
       });
     });

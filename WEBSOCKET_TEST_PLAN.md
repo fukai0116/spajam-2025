@@ -62,7 +62,7 @@
 
 5. **投票フェーズテスト**
    - 「投票開始」ボタンをクリック
-   - ログに投票フェーズ開始が表示されることを確認
+  - ログに投票フェーズ開始が表示されることを確認（イベント: `voting_started`）
 
 ### Step 3: 複数クライアントテスト
 
@@ -106,7 +106,7 @@
 ### サーバー側ログ（ターミナル）
 ```
 🔌 Player connected: [SocketID]
-👤 プレイヤー参加: [PlayerName] ([PlayerID])
+👤 プレイヤー参加: [PlayerName] ([PlayerID])（イベント: player_join → join_success）
 🏠 ルーム作成: [RoomID]
 😄 ダジャレ評価: "[Dajare]" スコア: [Score]
 🐺 人狼能力使用: [PlayerID]
@@ -116,8 +116,8 @@
 ```
 [時刻] ✅ WebSocket接続成功
 [時刻] 👤 プレイヤー参加: [PlayerName] ([PlayerID])
-[時刻] 🏠 ルーム作成成功: [RoomData]
-[時刻] 😄 ダジャレ評価: "[Dajare]" スコア: [Score] ダメージ: [Damage]
+[時刻] 🏠 ルーム作成成功: [RoomData]（イベント: room_created）
+[時刻] 😄 ダジャレ評価: "[Dajare]" 温度: [Temperature] 面白さ: [FunnyScore] 変化: [LifeDelta]（イベント: dajare_evaluated）
 [時刻] 💬 AIコメント: [Comment]
 ```
 

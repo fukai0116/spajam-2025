@@ -117,7 +117,7 @@ class GameWebSocketService {
       onWerewolfAbilityUsed?.call(Map<String, dynamic>.from(data));
     });
 
-    _socket!.on('voting_phase_started', (data) {
+    _socket!.on('voting_started', (data) {
       developer.log('投票フェーズ開始: $data');
       onVotingPhaseStarted?.call(Map<String, dynamic>.from(data));
     });

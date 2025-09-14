@@ -62,7 +62,7 @@ class _MultiplayRoomScreenState extends State<MultiplayRoomScreen> {
             _lastMessage = update['data']['message'];
           });
           break;
-        case 'dajare_submitted':
+        case 'dajare_evaluated':
           setState(() {
             _isSubmitting = false;
           });

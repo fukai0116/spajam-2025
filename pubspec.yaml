@@ -37,6 +37,7 @@ dependencies:
   go_router: ^16.2.1
   socket_io_client: ^3.1.2
   http: ^1.1.0
+  video_player: ^2.8.1
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +67,9 @@ flutter:
         - asset: assets/fonts/Noto_Serif_JP/NotoSerifJP-Regular.ttf
         - asset: assets/fonts/Noto_Serif_JP/NotoSerifJP-Bold.ttf
           weight: 700
+
+  assets:
+    - assets/videos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
