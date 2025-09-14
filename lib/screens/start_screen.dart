@@ -38,22 +38,18 @@ class StartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
-                // Logo
-                Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: theme.colorScheme.secondary.withOpacity(0.5),
-                      width: 1,
-                      style: BorderStyle.solid,
+                // Logo / Key Visual
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: theme.colorScheme.secondary.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'LOGO / KEY VISUAL',
-                      style: TextStyle(color: theme.colorScheme.secondary),
-                    ),
+                    child: Image.asset('assets/images/azuki.png', fit: BoxFit.cover),
                   ),
                 ),
                 // Description card (centered)
@@ -75,7 +71,7 @@ class StartScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'ダジャレの面白さをAIが評価し、あずきバーの温度が上下。時間内に溶かせば市民勝利、凍らせたままなら人狼勝利。',
+                              'ダジャレの面白さをAIが評価し、あずきバーの温度が上下。時間内に溶かせば和やかな人勝利、凍らせたままなら和を乱す人勝利。',
                               style: TextStyle(
                                 color: theme.colorScheme.onSurface.withOpacity(0.8),
                                 fontSize: 13,

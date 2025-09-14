@@ -21,7 +21,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _showRolePopup = true;
   bool _showStartText = false;
   bool _isTimerRunning = false;
-  final String _myRole = "市民"; // Dummy role
+  final String _myRole = "和やかな人"; // Dummy role
 
   @override
   void initState() {

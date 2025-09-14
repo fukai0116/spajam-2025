@@ -100,7 +100,7 @@
             <input type="text" id="dajareInput" placeholder="ダジャレを入力" disabled>
             <button id="submitDajareBtn" onclick="submitDajare()" disabled>ダジャレ投稿</button>
             <br>
-            <button id="werewolfAbilityBtn" onclick="useWerewolfAbility()" disabled>人狼能力使用</button>
+            <button id="werewolfAbilityBtn" onclick="useWerewolfAbility()" disabled>和を乱す人能力使用</button>
             <button id="startVotingBtn" onclick="startVoting()" disabled>投票開始</button>
         </div>
 
@@ -204,7 +204,7 @@
             });
 
             socket.on('role_assigned', (data) => {
-                addLog(`🎭 役職割り当て: ${data.role} ${data.isWerewolf ? '(人狼)' : '(市民)'}`);
+                addLog(`🎭 役職割り当て: ${data.role} ${data.isWerewolf ? '(和を乱す人)' : '(和やかな人)'}`);
             });
 
             socket.on('game_started', (data) => {
@@ -302,7 +302,7 @@
             socket.emit('use_werewolf_ability', {
                 playerId: playerId
             });
-            addLog('🐺 人狼能力使用');
+            addLog('🐺 和を乱す人能力使用');
         }
 
         function startVoting() {

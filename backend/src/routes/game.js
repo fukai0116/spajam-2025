@@ -200,7 +200,7 @@ router.post('/rooms/:roomId/vote', (req, res) => {
   }
 });
 
-// 人狼の特殊能力使用
+// 和を乱す人の特殊能力使用
 router.post('/rooms/:roomId/werewolf-ability', (req, res) => {
   try {
     const { playerId } = req.body;

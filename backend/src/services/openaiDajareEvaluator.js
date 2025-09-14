@@ -28,24 +28,24 @@ class AdvancedDajareEvaluator {
         messages: [
           {
             role: "system",
-            content: `あなたは優しいダジャレ評価の専門家です。あずきバーが溶けやすくなるように、ダジャレの温度を高めに評価してください：
+            content: `あなたは厳しめのダジャレ評価の専門家です。平均的なダジャレには低めの温度を付与し、明確に優れたダジャレのみ高温度を与えてください：
 
-【重要】普通のダジャレでも温度20〜35度程度をつけて、あずきバーが溶けやすくしてください！
+【重要】通常のダジャレは温度5〜20度程度、明確に優れたもののみ30度以上。やや弱い/寒いと感じるものは0〜5度、寒いものはマイナス評価。
 
-【評価基準】（高温度寄り設定）
-1. 温度レベル (-15〜60点): 
+【評価基準】（厳しめ設定）
+1. 温度レベル (-15〜50点): 
    - 寒い系ダジャレ: -15〜-3点
-   - 普通のダジャレ: 15〜35点（高めに設定）
-   - 面白いダジャレ: 35〜60点
-2. 面白さ (4〜10点): 優しく評価
-3. 創造性 (3〜10点): チャレンジ精神を評価
-4. 音韻 (3〜10点): 言葉遊びの試みを評価
+   - 低調/普通: 5〜20点（控えめ）
+   - 明確に面白い: 30〜50点（稀）
+2. 面白さ (3〜9点): 平均は5〜6点程度
+3. 創造性 (2〜8点)
+4. 音韻 (2〜8点)
 
 【温度付けの指針】
-- 「暑い」「熱い」「火」などの暑さ系キーワード → 40〜60点
-- 普通のダジャレや繰り返し系 → 20〜35点
-- つまらないダジャレでも → 15〜25点
-- 明らかに寒い系キーワードのみ → 0〜-15点
+- 暑さ系キーワードのみでは30度以上に直結しない。全体の巧妙さを重視。
+- 普通のダジャレや繰り返し系 → 5〜15度
+- つまらない/弱い → 0〜5度、またはマイナス
+- 明らかに寒い → 0〜-15度
 
 必ず以下のJSON形式で回答してください：
 {
@@ -84,7 +84,7 @@ class AdvancedDajareEvaluator {
       
       // 新しいAPIレスポンス形式に対応
       const temperature = data.temperature || 0;
-      const funnyScore = Math.max(data.funnyScore || 5, 3); // 最低3点保証
+      const funnyScore = Math.max(Math.min(data.funnyScore || 5, 9), 3);
       
       // ライフが減りやすい設定（新温度範囲対応）
       let azukiBarLifeChange = 0;
@@ -93,12 +93,12 @@ class AdvancedDajareEvaluator {
       } else if (temperature <= -3) {
         azukiBarLifeChange = Math.floor(Math.random() * 8) + 2; // 2-10点（少し凍る）
       } else if (temperature >= 40) {
-        azukiBarLifeChange = -(Math.floor(Math.random() * 30) + 15); // -15〜-45点（大きく溶ける）
+        azukiBarLifeChange = -(Math.floor(Math.random() * 20) + 12); // -12〜-32点（大きく溶ける）
       } else if (temperature >= 25) {
-        azukiBarLifeChange = -(Math.floor(Math.random() * 20) + 10); // -10〜-30点（溶ける）
-      } else if (temperature >= 10) {
-        azukiBarLifeChange = -(Math.floor(Math.random() * 12) + 5); // -5〜-17点（少し溶ける）
-      } else if (temperature >= 3) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 14) + 6); // -6〜-20点（溶ける）
+      } else if (temperature >= 12) {
+        azukiBarLifeChange = -(Math.floor(Math.random() * 9) + 3); // -3〜-12点（少し溶ける）
+      } else if (temperature >= 5) {
         azukiBarLifeChange = -(Math.floor(Math.random() * 6) + 2); // -2〜-8点（わずかに溶ける）
       }
       
@@ -140,7 +140,7 @@ class AdvancedDajareEvaluator {
     const length = dajare.length;
     
     // 優しい簡易評価ロジック
-    const thermal = this.analyzeThermalLevel(dajare);
+    const thermal = this.analyzeThermalLevel(dajare) - 1.5; // 厳しめバイアス
     const quality = Math.random() * 4 + 5; // 5-9点で優しく
     const creativity = Math.random() * 3 + 4; // 4-7点
     const sound = this.analyzeSoundPattern(dajare);
@@ -206,15 +206,15 @@ class AdvancedDajareEvaluator {
     } else if (thermalLevel <= -3) {
       // 寒いダジャレ：ライフ追加（2-10点）
       return Math.floor(Math.random() * 9) + 2;
-    } else if (thermalLevel >= 8) {
-      // 灼熱ダジャレ：ライフ減少（10-30点）
-      return -(Math.floor(Math.random() * 21) + 10);
-    } else if (thermalLevel >= 3) {
-      // 暑いダジャレ：ライフ減少（5-18点）
-      return -(Math.floor(Math.random() * 14) + 5);
-    } else if (thermalLevel >= 0) {
-      // ほんのり暖かいダジャレ：ライフ減少（2-8点）
-      return -(Math.floor(Math.random() * 7) + 2);
+    } else if (thermalLevel >= 9) {
+      // 灼熱ダジャレ：ライフ減少（8-24点）
+      return -(Math.floor(Math.random() * 17) + 8);
+    } else if (thermalLevel >= 5) {
+      // 暑いダジャレ：ライフ減少（4-14点）
+      return -(Math.floor(Math.random() * 11) + 4);
+    } else if (thermalLevel >= 2) {
+      // ほんのり暖かいダジャレ：ライフ減少（2-7点）
+      return -(Math.floor(Math.random() * 6) + 2);
     }
     // マイナス温度のダジャレ：変化なし
     return 0;
@@ -296,10 +296,10 @@ class AdvancedDajareEvaluator {
     }
   }
 
-  // 人狼効果適用
+  // 和を乱す人効果適用
   applyWerewolfEffect(score, isWerewolf) {
     if (isWerewolf) {
-      return score * 0.8; // 人狼は評価を20%下げる
+      return score * 0.8; // 和を乱す人は評価を20%下げる
     }
     return score;
   }

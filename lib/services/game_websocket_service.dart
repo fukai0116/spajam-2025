@@ -113,7 +113,7 @@ class GameWebSocketService {
     });
 
     _socket!.on('werewolf_ability_used', (data) {
-      developer.log('人狼能力使用: $data');
+      developer.log('和を乱す人能力使用: $data');
       onWerewolfAbilityUsed?.call(Map<String, dynamic>.from(data));
     });
 
@@ -205,11 +205,11 @@ class GameWebSocketService {
     });
   }
 
-  /// 人狼の特殊能力を使用
+  /// 和を乱す人の特殊能力を使用
   void useWerewolfAbility() {
     if (_socket == null || _playerId == null) return;
 
-    developer.log('人狼能力使用');
+    developer.log('和を乱す人能力使用');
     _socket!.emit('use_werewolf_ability', {
       'playerId': _playerId,
     });

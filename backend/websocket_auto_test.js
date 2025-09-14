@@ -73,7 +73,7 @@ client1.on('room_updated', (data) => {
 client1.on('dajare_evaluated', (data) => {
   logTest(`Client1 ダジャレ評価: "${data.dajareResult.dajare}" スコア: ${data.dajareResult.score}`);
   
-  // 人狼能力テスト
+  // 和を乱す人能力テスト
   setTimeout(() => {
     client1.emit('use_werewolf_ability', {
       playerId: 'test_player_1'
@@ -82,7 +82,7 @@ client1.on('dajare_evaluated', (data) => {
 });
 
 client1.on('werewolf_ability_used', (data) => {
-  logTest('Client1 人狼能力使用成功');
+  logTest('Client1 和を乱す人能力使用成功');
   
   // 投票フェーズテスト
   setTimeout(() => {

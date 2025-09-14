@@ -72,7 +72,7 @@ socket.emit('vote', {
 });
 ```
 
-#### 7. `use_werewolf_ability` - 人狼の特殊能力使用
+#### 7. `use_werewolf_ability` - 和を乱す人の特殊能力使用
 ```javascript
 socket.emit('use_werewolf_ability', {
   playerId: 'player123'
@@ -137,7 +137,7 @@ socket.on('vote_updated', (data) => {
 });
 ```
 
-#### 8. `werewolf_ability_used` - 人狼能力使用
+#### 8. `werewolf_ability_used` - 和を乱す人能力使用
 ```javascript
 socket.on('werewolf_ability_used', (data) => {
   // data: { message, gameState }

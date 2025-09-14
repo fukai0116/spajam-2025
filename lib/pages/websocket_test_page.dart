@@ -162,7 +162,7 @@ class _WebSocketTestPageState extends State<WebSocketTestPage> {
 
   void _useWerewolfAbility() {
     _webSocketService.useWerewolfAbility();
-    _addEventLog('人狼能力使用');
+    _addEventLog('和を乱す人能力使用');
   }
 
   void _startVoting() {
@@ -289,7 +289,7 @@ class _WebSocketTestPageState extends State<WebSocketTestPage> {
                             child: ElevatedButton(
                               onPressed: _useWerewolfAbility,
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-                              child: const Text('人狼能力'),
+                              child: const Text('和を乱す人能力'),
                             ),
                           ),
                           const SizedBox(width: 8),

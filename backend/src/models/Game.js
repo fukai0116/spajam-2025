@@ -7,7 +7,7 @@ class Player {
     this.socketId = socketId;
     this.role = null; // 'citizen' | 'werewolf'
     this.isAlive = true;
-    this.efficiencyModifier = 1.0; // 人狼の能力で変化
+    this.efficiencyModifier = 1.0; // 和を乱す人の能力で変化
     this.lastAbilityUse = null;
     this.joinedAt = new Date();
   }
@@ -81,7 +81,7 @@ class GameRoom {
   }
 
   prepareGame() {
-    // ランダムに人狼を1人選択
+    // ランダムに和を乱す人を1人選択
     const werewolfIndex = Math.floor(Math.random() * this.players.length);
     
     this.players.forEach((player, index) => {
@@ -186,7 +186,7 @@ class GameRoom {
       if (eliminatedPlayer) {
         eliminatedPlayer.isAlive = false;
         
-        // 人狼が追放されたかチェック
+        // 和を乱す人が追放されたかチェック
         if (eliminatedPlayer.role === 'werewolf') {
           this.endGame('citizens_win_by_vote');
         }
@@ -231,7 +231,7 @@ class GameRoom {
       return;
     }
 
-    // 人狼が全員追放されたかチェック
+    // 和を乱す人が全員追放されたかチェック
     const aliveWerewolves = this.players.filter(p => 
       p.isAlive && p.role === 'werewolf'
     );

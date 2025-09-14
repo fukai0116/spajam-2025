@@ -877,10 +877,10 @@ class DajareEvaluator {
     return baseScore + randomFactor;
   }
 
-  // 人狼の能力による評価変更
+  // 和を乱す人の能力による評価変更
   applyWerewolfEffect(score, isWerewolf = false) {
     if (isWerewolf) {
-      // 人狼のダジャレは必ず寒くなる（ただし露骨すぎないように）
+      // 和を乱す人のダジャレは必ず寒くなる（ただし露骨すぎないように）
       return Math.min(score - 2, score * 0.7);
     }
     return score;

@@ -12,8 +12,9 @@ class ResultScreen extends StatelessWidget {
     final playerName = (data?['playerName'] as String?)?.trim();
     final score = (data?['score'] as int?) ?? 0;
     final endReason = (data?['endReason'] as String?) ?? '';
-    final isWerewolfWin = endReason == 'timeout';
-    final resultTitle = isWerewolfWin ? '人狼陣営 勝利' : '市民陣営 勝利';
+    final role = (data?['role'] as String?) ?? '';
+    final isDisturberWin = endReason == 'timeout';
+    final resultTitle = isDisturberWin ? '和を乱す人陣営 勝利' : '和やかな人陣営 勝利';
     final rankings = [
       {
         'name': (playerName?.isNotEmpty == true) ? playerName : 'あなた',
@@ -30,7 +31,7 @@ class ResultScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              '市民 vs 人狼',
+              '和やかな人 vs 和を乱す人',
               style: TextStyle(color: theme.colorScheme.secondary, fontSize: 12),
             ),
           ),
@@ -68,6 +69,16 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
+                      if (role.isNotEmpty &&
+                          ((role == '和やかな人' && !isDisturberWin) ||
+                           (role == '和を乱す人' && isDisturberWin)))
+                        Text(
+                          'あなた（$role）の勝利です！',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
                       // 追加で詳細を出したければここに統計表示
                     ],
                   ),

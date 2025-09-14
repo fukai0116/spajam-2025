@@ -100,7 +100,7 @@ class GameService {
   // ダジャレをAIで評価（OpenAI + あずきバーライフシステム版）
   async evaluateDajare(dajare, player) {
     try {
-      // プレイヤーの効率修正と人狼かどうかを考慮
+      // プレイヤーの効率修正と和を乱す人かどうかを考慮
       const isWerewolf = player.role === 'werewolf';
       
       // 難易度を動的に設定
@@ -113,7 +113,7 @@ class GameService {
         difficulty
       );
       
-      // 人狼の場合は評価を調整
+      // 和を乱す人の場合は評価を調整
       let finalScore = evaluation.score;
       if (isWerewolf) {
         finalScore = this.dajareEvaluator.applyWerewolfEffect(finalScore, true);
@@ -244,7 +244,7 @@ class GameService {
     return room;
   }
 
-  // 人狼の特殊能力使用
+  // 和を乱す人の特殊能力使用
   useWerewolfAbility(playerId) {
     const room = this.getPlayerRoom(playerId);
     if (!room) {

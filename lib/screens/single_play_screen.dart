@@ -5,6 +5,7 @@ import 'package:spajam2025/config/color_schemes.dart';
 import '../services/single_game_service.dart';
 import 'dart:async';
 import 'package:spajam2025/widgets/azuki_bar_video.dart';
+import 'dart:math';
 
 class SinglePlayScreen extends StatefulWidget {
   const SinglePlayScreen({super.key});
@@ -26,6 +27,9 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
   bool _historyExpanded = false;
   bool _ending = false;
   String _endReason = '';
+  String? _role; // '和やかな人' or '和を乱す人'
+  bool _showRoleOverlay = false;
+  bool _showStartBanner = false;
 
   // ローカル制限時間（1:30）
   static const int _localLimitMs = 90 * 1000;
@@ -101,26 +105,50 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
         const SnackBar(content: Text('ゲーム開始に失敗しました')),
       );
     } else {
-      // ローカル制限時間（1:30）を開始
-      _localRemainingMs = _localLimitMs;
-      _localTimer?.cancel();
-      _localTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-        if (!_gameStarted || _ending) {
-          t.cancel();
-          return;
-        }
-        if (mounted) {
+      // 役割を決定し、ポップアップ表示（5秒）→Start!表示（1秒）→その後カウント開始
+      final r = Random();
+      _role = r.nextBool() ? '和やかな人' : '和を乱す人';
+      setState(() {
+        _showRoleOverlay = true;
+      });
+
+      Future.delayed(const Duration(seconds: 5), () {
+        if (!mounted) return;
+        setState(() {
+          _showRoleOverlay = false;
+          _showStartBanner = true;
+        });
+        Future.delayed(const Duration(seconds: 1), () {
+          if (!mounted) return;
           setState(() {
-            _localRemainingMs = (_localRemainingMs - 1000).clamp(0, _localLimitMs);
+            _showStartBanner = false;
           });
-        }
-        if (_localRemainingMs <= 0 && !_ending) {
-          _ending = true;
-          _endReason = 'timeout';
-          _endGameAndNavigate();
-        }
+          _startLocalTimer();
+        });
       });
     }
+  }
+
+  void _startLocalTimer() {
+    // ローカル制限時間（1:30）を開始
+    _localRemainingMs = _localLimitMs;
+    _localTimer?.cancel();
+    _localTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!_gameStarted || _ending) {
+        t.cancel();
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _localRemainingMs = (_localRemainingMs - 1000).clamp(0, _localLimitMs);
+        });
+      }
+      if (_localRemainingMs <= 0 && !_ending) {
+        _ending = true;
+        _endReason = 'timeout';
+        _endGameAndNavigate();
+      }
+    });
   }
 
   Future<void> _evaluateDajare() async {
@@ -163,6 +191,7 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
       'score': gs?.score ?? 0,
       'endReason': _endReason,
       'life': gs?.azukiBarLife ?? 0,
+      'role': _role ?? '',
     };
     context.go('/result', extra: payload);
   }
@@ -289,9 +318,9 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.20),
-                    Colors.black.withOpacity(0.05),
-                    Colors.black.withOpacity(0.35),
+                    Colors.black.withOpacity(0.10),
+                    Colors.black.withOpacity(0.03),
+                    Colors.black.withOpacity(0.25),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
@@ -315,9 +344,9 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
                   constraints: BoxConstraints(maxWidth: maxW),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.white.withOpacity(0.85),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white24),
+                      border: Border.all(color: Colors.black12),
                     ),
                     padding: const EdgeInsets.all(12),
                     child: _buildLatestEvalCompact(),
@@ -344,13 +373,55 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.55),
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white24),
+                border: Border.all(color: Colors.black12),
               ),
               padding: const EdgeInsets.all(12),
               height: 240,
               child: _buildHistoryCompact(),
+            ),
+          ),
+
+        // 役割ポップアップ（5秒表示）
+        if (_showRoleOverlay && _role != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.55),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('役割', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(height: 8),
+                      Text('あなたは「$_role」です。', style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // Start! バナー（1秒表示）
+        if (_showStartBanner)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('Start!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                ),
+              ),
             ),
           ),
       ],
@@ -440,20 +511,20 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('最新の評価', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        const Text('最新の評価', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Text('"${e.dajare}"', maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)),
+            style: const TextStyle(color: Colors.black87, fontStyle: FontStyle.italic)),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('温度: ${e.evaluation.temperatureText}', style: TextStyle(color: e.evaluation.temperatureColor)),
-            Text('変化: ${e.lifeDeltaText}', style: TextStyle(color: e.lifeDelta < 0 ? Colors.lightBlueAccent : Colors.orangeAccent)),
+            Text('変化: ${e.lifeDeltaText}', style: TextStyle(color: e.lifeDelta < 0 ? Colors.blue : Colors.deepOrange)),
           ],
         ),
         const SizedBox(height: 6),
-        Text(e.evaluation.comment, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(e.evaluation.comment, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black87, fontSize: 12)),
       ],
     );
   }
@@ -761,8 +832,9 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('シングルプレイ'),
+        title: _buildAppBarTitle(),
         automaticallyImplyLeading: false,
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: () => setState(() => _historyExpanded = !_historyExpanded),
@@ -793,16 +865,24 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
         children: [
           Row(
             children: [
+              const Icon(Icons.person, size: 16, color: Colors.black54),
+              const SizedBox(width: 6),
               Text(
                 game.playerName.isNotEmpty ? game.playerName : 'プレイヤー',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 12),
-              Text('スコア ${game.score}', style: const TextStyle(color: Colors.white70)),
+              Text('スコア ${game.score}', style: const TextStyle(color: Colors.black87)),
               const SizedBox(width: 12),
-              Text('ダジャレ ${game.dajareCount}', style: const TextStyle(color: Colors.white70)),
+              Text('ダジャレ ${game.dajareCount}', style: const TextStyle(color: Colors.black87)),
               const Spacer(),
-              Text('残り $remaining', style: const TextStyle(color: Colors.white)),
+              Row(
+                children: [
+                  const Icon(Icons.favorite, size: 16, color: Colors.redAccent),
+                  const SizedBox(width: 4),
+                  Text('ライフ ${game.azukiBarLife}/100', style: const TextStyle(color: Colors.black)),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -811,7 +891,7 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
             child: LinearProgressIndicator(
               minHeight: 6,
               value: game.azukiBarLife / 100,
-              backgroundColor: Colors.white24,
+              backgroundColor: Colors.black12,
               valueColor: AlwaysStoppedAnimation<Color>(
                 game.azukiBarLife > 70 ? Colors.lightBlueAccent :
                 game.azukiBarLife > 30 ? Colors.orangeAccent : Colors.redAccent,
@@ -819,7 +899,7 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text('ライフ ${game.azukiBarLife}/100', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text('ライフ ${game.azukiBarLife}/100', style: const TextStyle(color: Colors.black87, fontSize: 12)),
         ],
       ),
     );
@@ -830,5 +910,40 @@ class _SinglePlayScreenState extends State<SinglePlayScreen> {
     final m = s ~/ 60;
     final ss = (s % 60).toString().padLeft(2, '0');
     return '$m:$ss';
+  }
+
+  // AppBarタイトル：中央に役割、右に制限時間
+  Widget _buildAppBarTitle() {
+    final roleText = (_role ?? '').isNotEmpty ? _role! : 'シングルプレイ';
+    if (!_gameStarted || _gameState == null) {
+      return Text(roleText, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold));
+    }
+    final remaining = _localRemainingMs > 0
+        ? _formatMs(_localRemainingMs)
+        : _gameState!.timeRemainingText;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Text(roleText, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.timer, size: 16, color: Colors.black87),
+                const SizedBox(width: 6),
+                Text('残り $remaining', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
