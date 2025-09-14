@@ -5,7 +5,7 @@ class MultiplayGameRoom {
   constructor(roomId, hostPlayerId, hostPlayerName, maxPlayers = 4) {
     this.roomId = roomId;
     this.hostPlayerId = hostPlayerId;
-    this.status = 'waiting'; // waiting, playing, voting, finished
+    this.status = 'waiting'; // waiting, playing, finished
     this.maxPlayers = maxPlayers;
     this.players = new Map(); // playerId -> PlayerInfo
     this.spectators = new Map(); // spectatorId -> SpectatorInfo
@@ -16,7 +16,7 @@ class MultiplayGameRoom {
       maxRounds: 3
     };
     this.currentRound = 0;
-    this.currentPhase = 'waiting'; // waiting, dajare, voting, result
+    this.currentPhase = 'waiting'; // waiting, dajare
     this.startedAt = null;
     this.endedAt = null;
     this.dajareHistory = [];
@@ -24,6 +24,8 @@ class MultiplayGameRoom {
     this.dajareEvaluator = new AdvancedDajareEvaluator();
     this.currentDajareIndex = 0;
     this.roundResults = [];
+    this.roles = new Map(); // playerId -> role
+    this.azukiBarLife = 100; // shared life
 
     // ホストプレイヤーを追加
     this.addPlayer(hostPlayerId, hostPlayerName);
@@ -108,11 +110,22 @@ class MultiplayGameRoom {
     this.currentRound = 1;
     this.startedAt = Date.now();
 
-    // 全プレイヤーのライフをリセット
+    // 全プレイヤーの状態をリセット、共有ライフ初期化
+    this.azukiBarLife = 100;
     for (const player of this.players.values()) {
-      player.azukiBarLife = 100;
       player.score = 0;
       player.dajareCount = 0;
+      }
+
+    // 役割割当：1名のみ和を乱す人、他は和やかな人
+    const ids = Array.from(this.players.keys());
+    const disturberIndex = Math.floor(Math.random() * ids.length);
+    const disturberId = ids[disturberIndex];
+    for (const pid of ids) {
+      const role = pid === disturberId ? '和を乱す人' : '和やかな人';
+      this.roles.set(pid, role);
+      const p = this.players.get(pid);
+      if (p) p.role = role;
     }
 
     console.log(`🚀 ルーム ${this.roomId} でゲーム開始！ (${this.players.size}人)`);
@@ -138,11 +151,15 @@ class MultiplayGameRoom {
     const evaluation = await this.dajareEvaluator.evaluateDajare(dajare);
     
     // ライフ変化計算（temperatureに統一）
-    const temp = typeof evaluation.temperature === 'number' 
-      ? evaluation.temperature 
+    const temp = typeof evaluation.temperature === 'number'
+      ? evaluation.temperature
       : (evaluation.breakdown?.thermal ?? 0);
-    const lifeDelta = this.calculateLifeDelta(temp);
-    player.azukiBarLife = Math.max(0, Math.min(100, player.azukiBarLife + lifeDelta));
+    let lifeDelta = this.calculateLifeDelta(temp);
+    const role = this.roles.get(playerId) || player.role || '和やかな人';
+    if (role === '和を乱す人') {
+      lifeDelta = -lifeDelta; // 妨害役は符号反転
+    }
+    this.azukiBarLife = Math.max(0, Math.min(100, this.azukiBarLife + lifeDelta));
     player.lastDajare = dajare;
     player.dajareCount++;
 
@@ -161,12 +178,7 @@ class MultiplayGameRoom {
 
     this.dajareHistory.push(dajareEntry);
 
-    console.log(`💬 ${player.playerName}: "${dajare}" (${temp}度, ライフ変化: ${lifeDelta})`);
-
-    // 全員投稿完了チェック
-    if (this.hasAllPlayersSubmitted()) {
-      await this.startVotingPhase();
-    }
+    console.log(`💬 ${player.playerName}: "${dajare}" (${temp}度, 変化: ${lifeDelta}) 共有ライフ: ${this.azukiBarLife}`);
 
     return {
       dajareEntry,
@@ -175,31 +187,7 @@ class MultiplayGameRoom {
     };
   }
 
-  // 投票フェーズ開始
-  async startVotingPhase() {
-    this.currentPhase = 'voting';
-    this.votingResults.clear();
-
-    // 投票用のダジャレ一覧を作成（今回のラウンドのみ）
-    const currentRoundDajares = this.dajareHistory.filter(d => d.round === this.currentRound);
-
-    console.log(`🗳️ ルーム ${this.roomId} で投票フェーズ開始`);
-
-    // 投票時間後に自動的に結果フェーズへ移行（タイマーIDを保存）
-    this.votingTimer = setTimeout(() => {
-      if (this.currentPhase === 'voting') {
-        console.log(`⏰ ルーム ${this.roomId} 投票時間終了、結果処理開始`);
-        this.processVotingResults();
-      }
-    }, this.gameSettings.votingTime);
-
-    return {
-      phase: 'voting',
-      dajares: currentRoundDajares,
-      timeLimit: this.gameSettings.votingTime,
-      startedAt: Date.now()
-    };
-  }
+  // 投票関連は協力モードでは未使用
 
   // 投票
   vote(playerId, dajareId) {

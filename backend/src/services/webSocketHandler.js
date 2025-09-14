@@ -4,6 +4,7 @@ class WebSocketHandler {
   constructor(io) {
     this.io = io;
     this.multiplayManager = new MultiplayGameManager();
+    this.playerSockets = new Map(); // playerId -> socket
     this.setupEventHandlers();
 
     // 定期クリーンアップ（5分ごと）
@@ -73,6 +74,7 @@ class WebSocketHandler {
     try {
       socket.playerId = playerId;
       socket.playerName = playerName;
+      this.playerSockets.set(playerId, socket);
       
       socket.emit('join_success', {
         playerId,
@@ -98,6 +100,7 @@ class WebSocketHandler {
       socket.playerId = playerId;
       socket.roomId = room.roomId;
       socket.join(room.roomId);
+      this.playerSockets.set(playerId, socket);
 
       socket.emit('room_created', {
         room: this.getRoomStateForClient(room),
@@ -117,6 +120,7 @@ class WebSocketHandler {
       socket.playerId = playerId;
       socket.roomId = roomId;
       socket.join(roomId);
+      this.playerSockets.set(playerId, socket);
 
       // ルーム内の全プレイヤーに通知
       this.io.to(roomId).emit('room_updated', {
@@ -151,6 +155,7 @@ class WebSocketHandler {
       socket.playerId = playerId;
       socket.roomId = room.roomId;
       socket.join(room.roomId);
+      this.playerSockets.set(playerId, socket);
 
       if (isNewRoom) {
         socket.emit('room_created', {
@@ -193,6 +198,15 @@ class WebSocketHandler {
 
       const gameState = room.startGame();
 
+      // 役割を各プレイヤーに通知
+      for (const [pid, p] of room.players) {
+        const s = this.playerSockets.get(pid);
+        if (s) {
+          const role = (room.roles && room.roles.get(pid)) || p.role || '和やかな人';
+          s.emit('role_assigned', { role });
+        }
+      }
+
       // ルーム内の全プレイヤーにゲーム開始を通知
       this.io.to(room.roomId).emit('game_started', {
         gameState,
@@ -222,7 +236,7 @@ class WebSocketHandler {
 
       // ルーム内の全プレイヤーに更新を通知
       this.io.to(room.roomId).emit('game_updated', {
-        gameState: result.gameState,
+        gameState: room.getGameState(),
         lastDajare: {
           playerName: result.dajareEntry.playerName,
           dajare: result.dajareEntry.dajare,
@@ -230,11 +244,15 @@ class WebSocketHandler {
         }
       });
 
-      // 投票フェーズ開始チェック
-      if (room.currentPhase === 'voting') {
-        const votingState = room.getVotingState();
-        console.log(`🗳️ ルーム ${room.roomId} 投票フェーズ開始を全員に通知`);
-        this.io.to(room.roomId).emit('voting_started', votingState);
+      // 終了判定（共有ライフ or タイムアップ）
+      const timeRem = room.getTimeRemaining();
+      if (room.azukiBarLife !== undefined && (room.azukiBarLife <= 0 || timeRem <= 0)) {
+        const winner = room.azukiBarLife <= 0 ? '和やかな人' : '和を乱す人';
+        room.endGame();
+        this.io.to(room.roomId).emit('game_ended', {
+          winner,
+          gameState: room.getGameState(),
+        });
       }
 
     } catch (error) {
@@ -367,6 +385,7 @@ class WebSocketHandler {
       phase: room.currentPhase,
       round: room.currentRound,
       maxRounds: room.gameSettings.maxRounds,
+      azukiBarLife: room.azukiBarLife,
       players: Array.from(room.players.values()).map(player => ({
         playerId: player.playerId,
         playerName: player.playerName,
