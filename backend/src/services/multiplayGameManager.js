@@ -137,8 +137,11 @@ class MultiplayGameRoom {
     // AI評価実行
     const evaluation = await this.dajareEvaluator.evaluateDajare(dajare);
     
-    // ライフ変化計算
-    const lifeDelta = this.calculateLifeDelta(evaluation.thermal);
+    // ライフ変化計算（temperatureに統一）
+    const temp = typeof evaluation.temperature === 'number' 
+      ? evaluation.temperature 
+      : (evaluation.breakdown?.thermal ?? 0);
+    const lifeDelta = this.calculateLifeDelta(temp);
     player.azukiBarLife = Math.max(0, Math.min(100, player.azukiBarLife + lifeDelta));
     player.lastDajare = dajare;
     player.dajareCount++;
@@ -158,7 +161,7 @@ class MultiplayGameRoom {
 
     this.dajareHistory.push(dajareEntry);
 
-    console.log(`💬 ${player.playerName}: "${dajare}" (${evaluation.thermal}度, ライフ変化: ${lifeDelta})`);
+    console.log(`💬 ${player.playerName}: "${dajare}" (${temp}度, ライフ変化: ${lifeDelta})`);
 
     // 全員投稿完了チェック
     if (this.hasAllPlayersSubmitted()) {
@@ -444,8 +447,10 @@ class MultiplayGameRoom {
         votes: d.votes,
         evaluation: {
           score: d.evaluation.score,
-          thermal: d.evaluation.thermal,
-          evaluation: d.evaluation.evaluation
+          temperature: (typeof d.evaluation.temperature === 'number' 
+            ? d.evaluation.temperature 
+            : (d.evaluation.breakdown?.thermal ?? 0)),
+          comment: d.evaluation.comment ?? d.evaluation.evaluation
         }
       })),
       hasVoted: Array.from(this.players.values()).map(p => ({

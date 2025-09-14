@@ -229,7 +229,7 @@
                 updateGameState(data.gameState);
             });
 
-            socket.on('voting_phase_started', (data) => {
+            socket.on('voting_started', (data) => {
                 addLog(`🗳️ ${data.message}`);
                 updateGameState(data.gameState);
             });

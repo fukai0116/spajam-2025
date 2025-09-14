@@ -126,7 +126,7 @@ socket.on('game_started', (data) => {
 #### 6. `dajare_evaluated` - ダジャレ評価結果
 ```javascript
 socket.on('dajare_evaluated', (data) => {
-  // data: { dajareResult, gameState }
+  // data: { dajareEntry, playerState }
 });
 ```
 
@@ -144,9 +144,9 @@ socket.on('werewolf_ability_used', (data) => {
 });
 ```
 
-#### 9. `voting_phase_started` - 投票フェーズ開始
+#### 9. `voting_started` - 投票フェーズ開始
 ```javascript
-socket.on('voting_phase_started', (data) => {
+socket.on('voting_started', (data) => {
   // data: { message, gameState }
 });
 ```
@@ -290,17 +290,24 @@ socket.emit('submit_dajare', {
   dajare: 'アイスクリームは愛すクリーム'
 });
 
-// 評価結果を受信
+// 評価結果を受信（投稿者向け）
 socket.on('dajare_evaluated', (data) => {
-  console.log('ダジャレ評価:', data.dajareResult);
+  console.log('ダジャレ評価:', data.dajareEntry);
+});
+
+// ルーム全体の状態更新（全員向け）
+socket.on('game_updated', (data) => {
   console.log('ゲーム状態:', data.gameState);
+  if (data.lastDajare) {
+    console.log('直近の投稿:', data.lastDajare);
+  }
 });
 ```
 
 ### 4. 投票フェーズ
 ```javascript
 // 投票フェーズ開始を受信
-socket.on('voting_phase_started', (data) => {
+socket.on('voting_started', (data) => {
   console.log('投票開始:', data.message);
 });
 

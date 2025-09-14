@@ -28,7 +28,7 @@
 ### 2. ダジャレ評価システム
 
 - プレイヤーがダジャレを投稿
-- OpenAI APIがダジャレの「温度」を評価（-10〜+10の数値）
+- OpenAI APIがダジャレの「温度」（temperature）を評価（例: -15〜+60の範囲で返却；内部処理は正規化）
 - 評価に基づいてあずきバーの耐久値を変更
   - 熱いダジャレ（+5以上）: 耐久値を10-50減らす（溶かす）🔥
   - 普通のダジャレ（-4〜+4）: 耐久値変化なし😐
@@ -77,18 +77,17 @@
 }
 ```
 
-### DajareEvaluation
+### DajareEvaluation（正規化）
 
 ```javascript
 {
   dajare: string,
-  score: number, // -10 to +10
-  breakdown: {
-    thermal: number,
-    quality: number,
-    creativity: number,
-    sound: number
-  },
+  temperature: number, // 寒い<0 / 暑い>0
+  funnyScore: number,
+  comment: string,
+  // 互換フィールド（内部/旧仕様）
+  score: number,
+  breakdown: { thermal: number, quality: number, creativity: number, sound: number },
   azukiBarLifeChange: number,
   evaluation: string,
   analysis: string,

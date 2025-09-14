@@ -92,7 +92,7 @@ client1.on('werewolf_ability_used', (data) => {
   }, 1000);
 });
 
-client1.on('voting_phase_started', (data) => {
+client1.on('voting_started', (data) => {
   logTest('Client1 投票フェーズ開始成功');
   
   // テスト完了
@@ -119,7 +119,7 @@ client2.on('join_success', (data) => {
   
   // オートマッチング（既存ルームに参加）
   setTimeout(() => {
-    client2.emit('auto_match', {
+  client2.emit('auto_match', {
       playerId: 'test_player_2',
       playerName: 'テストプレイヤー2'
     });

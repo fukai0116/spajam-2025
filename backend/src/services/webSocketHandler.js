@@ -16,8 +16,8 @@ class WebSocketHandler {
     this.io.on('connection', (socket) => {
       console.log(`🔌 Player connected: ${socket.id}`);
 
-      // プレイヤー接続時の初期化
-      socket.on('player_connect', (data) => {
+      // プレイヤー接続時の初期化（イベント名を統一）
+      socket.on('player_join', (data) => {
         this.handlePlayerConnect(socket, data);
       });
 
@@ -74,7 +74,7 @@ class WebSocketHandler {
       socket.playerId = playerId;
       socket.playerName = playerName;
       
-      socket.emit('connect_success', {
+      socket.emit('join_success', {
         playerId,
         playerName,
         socketId: socket.id
@@ -214,8 +214,8 @@ class WebSocketHandler {
 
       const result = await room.submitDajare(playerId, dajare);
 
-      // 投稿者に結果を送信
-      socket.emit('dajare_submitted', {
+      // 投稿者に結果を送信（イベント名を統一）
+      socket.emit('dajare_evaluated', {
         dajareEntry: result.dajareEntry,
         playerState: result.playerState
       });

@@ -107,6 +107,12 @@ class AdvancedDajareEvaluator {
       const finalScore = totalScore * efficiencyModifier;
 
       return {
+        // 正規化フィールド（クライアント向け）
+        temperature: temperature,
+        funnyScore: funnyScore,
+        comment: data.comment || 'ナイスなダジャレです！',
+
+        // 既存互換フィールド（暫定互換用）
         score: Math.round(finalScore * 10) / 10,
         breakdown: {
           thermal: temperature,
@@ -146,6 +152,12 @@ class AdvancedDajareEvaluator {
     const azukiBarLifeChange = this.calculateAzukiBarLifeChange(thermal);
 
     return {
+      // 正規化フィールド（クライアント向け）
+      temperature: thermal,
+      funnyScore: Math.round((quality) * 10) / 10,
+      comment: this.getEvaluationText(score),
+
+      // 既存互換フィールド（暫定互換用）
       score: Math.round(score * 10) / 10,
       breakdown,
       evaluation: this.getEvaluationText(score),
